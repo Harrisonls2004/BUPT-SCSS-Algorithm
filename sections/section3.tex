@@ -1,0 +1,695 @@
+\section{动态规划}
+
+\subsection{矩阵连乘问题}
+
+\textbf{问题描述：}
+给定一系列矩阵 $A_1, A_2, \dots, A_n$，
+其中矩阵 $A_i$ 的规模为 $p_{i-1}\times p_i$。
+由于矩阵乘法满足结合律，但不同的加括号方式会导致
+\textbf{标量乘法次数不同}，
+矩阵连乘问题的目标是：\textbf{确定一种加括号方式，使得计算 $A_1A_2\cdots A_n$ 所需的标量乘法次数最少。}
+
+状态转移方程为：$$
+m[i,j] = 
+\begin{cases} 
+0, & i = j \\[8pt]
+\displaystyle\min_{i \leq k < j} 
+\bigl\{ m[i,k] + m[k+1,j] + p_{i-1}p_k p_j \bigr\}, & i < j 
+\end{cases}
+$$
+
+\subsubsection{常规方法}
+\begin{verbatim}
+void MatrixChain(int *p, int n, int **m, int **s) 
+// m[i][j]：最少乘法次数
+// s[i][j]：A_i...A_j 的最优断开位置
+{
+    for (int i = n; i >= 1; i--) {        // 区间左端点
+        for (int j = i; j <= n; j++) {    // 区间右端点
+            if (i == j)
+                m[i][j] = 0;              // 单个矩阵，代价为 0
+            else {
+                int temp = INT_MAX;
+                for (int k = i; k < j; k++) {
+                    int ans = m[i][k] + m[k+1][j] + p[i-1] * p[k] * p[j];
+                    // p[i-1]是k-1的行数；p[k]是列，也是j的行数；p[j]是j的列数
+                    if (ans < temp) {
+                        temp = ans;
+                        s[i][j] = k;      // 记录最优划分点
+                    }
+                }
+                m[i][j] = temp;
+            }
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{算法复杂度分析：}MatrixChain的主要计算量取决于算法中对$i$，$j$和$k$的3重循环。循环体内的计算量为$O(1)$，而3重循环的总次数为$O(n^{3})$。因此算法的计算时间上界为$O(n^{3})$。算法所占用的空间显然为$O(n^{2})$。
+
+\subsubsection{递归方法}
+
+\begin{verbatim}
+int LookupChain(int i, int j)
+{
+    if (m[i][j] > 0) return m[i][j];      // 已算过：直接返回（记忆化）
+    if (i == j) return 0;                 // 只有一个矩阵：代价为0
+    int u = LookupChain(i, i) + LookupChain(i+1, j) + p[i-1] * p[i] * p[j]; // 先假设 k=i
+    s[i][j] = i;
+    for (int k = i+1; k < j; k++) {       // 枚举所有划分点 k
+        int t = LookupChain(i, k) + LookupChain(k+1, j) + p[i-1] * p[k] * p[j];
+        if (t < u) {                      // 取最小
+            u = t;
+            s[i][j] = k;                  // 记录最优划分点
+        }
+    }
+    m[i][j] = u;                          // 记忆化保存结果
+    return u;
+}
+\end{verbatim}
+
+\textbf{递归复杂度：}
+子问题总数为 $\frac{n(n+1)}{2}=O(n^2).$
+每个子问题在求最小值时要枚举 $k$，最多 $O(n)$ 次，
+所以总时间复杂度为 $O(n^3),$
+空间复杂度由 $m,s$ 两张表决定，为 $O(n^2).$
+
+\subsection{最长公共子序列（LCS）}
+\textbf{问题描述：}
+给定两个序列 $X=\langle x_1,x_2,\dots,x_m\rangle$ 与
+$Y=\langle y_1,y_2,\dots,y_n\rangle$，
+求它们的最长公共子序列（LCS）的长度，并输出一个 LCS。
+
+$$
+c[i][j]=
+\begin{cases}
+0, & i=0, j=0 \\[6pt]
+c[i-1][j-1]+1, & i,j>0;\ x_i = y_j \\[6pt]
+\max\{c[i][j-1],\ c[i-1][j]\}, & i,j>0;\ x_i \neq y_j
+\end{cases}
+$$
+
+\begin{verbatim}
+void LCSLength(int m, int n, char *x, char *y, int **c, int **b)
+{
+    int i, j;
+    // 初始化边界：任意序列与空序列的LCS长度为0
+    for (i = 0; i <= m; i++) c[i][0] = 0;
+    for (j = 0; j <= n; j++) c[0][j] = 0;
+    // 动态规划填表：从小规模子问题推到大规模子问题
+    for (i = 1; i <= m; i++) {
+        for (j = 1; j <= n; j++) {
+            if (x[i] == y[j]) {              // xi == yj
+                c[i][j] = c[i-1][j-1] + 1;
+                b[i][j] = 1;                 // 记录来自左上
+            } else if (c[i-1][j] >= c[i][j-1]) {
+                c[i][j] = c[i-1][j];
+                b[i][j] = 2;                 // 记录来自上
+            } else {
+                c[i][j] = c[i][j-1];
+                b[i][j] = 3;                 // 记录来自左
+            }
+        }
+    }
+}
+\end{verbatim}
+
+\begin{verbatim}
+void LCS(int i, int j, char *x, int **b)
+{
+    if (i == 0 || j == 0) return;     // 回溯到边界，结束
+    if (b[i][j] == 1) {               // 来自左上：说明匹配到一个字符
+        LCS(i-1, j-1, x, b);
+        printf("%c", x[i]);           // 输出该字符（属于LCS）
+    } else if (b[i][j] == 2) {        // 来自上：丢弃 xi
+        LCS(i-1, j, x, b);
+    } else {                          // 来自左：丢弃 yj
+        LCS(i, j-1, x, b);
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度：}
+表格大小为 $m\times n$，每个格子 $O(1)$ 计算，
+所以时间复杂度为 $O(mn),$
+空间复杂度为 $O(mn).$
+回溯输出最多走 $m+n$ 步，为 $O(m+n).$
+
+\subsection{最优三角形划分（Min-Weight Triangulation）}
+
+\textbf{问题描述：}
+给定一个凸多边形，顶点按顺序编号为
+$v_0, v_1, v_2, \dots, v_n,$
+其中共有 $n+1$ 个顶点。
+将多边形用不相交的对角线划分成若干三角形（三角剖分）。
+设三角形 $(v_i,v_k,v_j)$ 的代价为
+$w(i,k,j).$
+目标是找到一种三角剖分，使总代价最小。
+
+对所有 $i\le k<j$ 取最小即可。$$
+t[i][j]=
+\begin{cases}
+0, & i=j \\[8pt]
+\displaystyle\min_{i\leq k<j}\{ t[i][k]+t[k+1][j]+w(v_{i-1}v_{k}v_{j})\}, & i<j
+\end{cases}
+$$
+
+\begin{verbatim}
+void MinWeightTriangulation(int n, Type **t, int **s)
+{
+    for (int i = 1; i <= n; i++) t[i][i] = 0;
+    for (int r = 2; r <= n; r++) { // 子问题长度 r: j = i + r - 1
+        for (int i = 1; i <= n - r + 1; i++) {
+            int j = i + r - 1;
+            // 先令 k = i 作为初值（即选三角形 (i-1, i, j)）
+            t[i][j] = t[i+1][j] + w(i-1, i, j);
+            s[i][j] = i;
+            // 枚举 i+1 ... j-1
+            for (int k = i+1; k < j; k++) {
+                int u = t[i][k] + t[k+1][j] + w(i-1, k, j);
+                if (u < t[i][j]) {
+                    t[i][j] = u;
+                    s[i][j] = k;
+                }
+            }
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+状态数为 $O(n^2)$（所有 $1\le i\le j\le n$），
+每个状态需要枚举 $k$，最多 $O(n)$ 次，
+因此时间复杂度为
+$O(n^3).$
+数组 $t,s$ 的规模为 $O(n^2)$，空间复杂度为
+$O(n^2).$
+
+\subsection{多边形游戏（Polygon Game）}
+
+\textbf{问题描述：}
+多边形游戏给定一个含 $n$ 个顶点的环状表达式（可看作一个多边形），
+每条边上有一个运算符（如 $+$ 或 $\times$），每个顶点上有一个数。
+通过选择删边/断开位置并确定计算顺序（等价于给表达式加括号），
+最终会得到一个结果值。目标通常是求\textbf{最大结果}（或同时求最大/最小以便处理乘法含负数的情况）。
+
+\[
+\min f(i,j,s) = 
+\begin{cases}
+a + c, & \text{op}[i+s] = '+' \\[6pt]
+\min\{ac, ad, bc, bd\}, & \text{op}[i+s] = '*'
+\end{cases}
+\]
+
+\[
+\max f(i,j,s) = 
+\begin{cases}
+b + d, & \text{op}[i+s] = '+' \\[6pt]
+\max\{ac, ad, bc, bd\}, & \text{op}[i+s] = '*'
+\end{cases}
+\]
+
+由于最优断开位置 $s$ 有 $1 \leq s \leq j-1$ 的 $j-1$ 种情况，由此可知
+
+\[
+m[i,j,0] = \min_{1 \leq s \leq j-1} \{\min f(i,j,s)\}, \quad 1 \leq i,j \leq n
+\]
+
+\[
+m[i,j,1] = \max_{1 \leq s \leq j-1} \{\max f(i,j,s)\}, \quad 1 \leq i,j \leq n
+\]
+
+\textbf{初始边界值:}
+$
+m[i,1,0] = v[i], \quad m[i,1,1] = v[i]
+$
+
+\begin{verbatim}
+void PolyMax(int n)
+{
+    int minf, maxf;
+    for (int j = 2; j <= n; j++) {          // 子链长度 j
+        for (int i = 1; i <= n; i++) {      // 子链起点 i（环状）
+            for (int s = 1; s < j; s++) {   // 断开位置 s（划分成两段）
+                MinMax(n, i, s, j, minf, maxf);
+
+                if (m[i][j][0] > minf)
+                    m[i][j][0] = minf;      // 更新最小值
+
+                if (m[i][j][1] < maxf)
+                    m[i][j][1] = maxf;      // 更新最大值
+            }
+        }
+    }
+
+    int temp = m[1][n][1];
+    for (int i = 2; i <= n; i++) {          // 枚举起点，取全局最大
+        if (temp < m[i][n][1])
+            temp = m[i][n][1];
+    }
+    return temp;
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+三重循环规模约为：
+$j:O(n),\ i:O(n),\ s:O(n),$
+每次 \texttt{MinMax} 计算为常数时间，
+因此时间复杂度为$O(n^3),$
+状态数组 $m[i][j][0/1]$ 的规模为 $O(n^2)$，
+空间复杂度为$O(n^2).$
+
+\subsection{图像压缩}
+
+\textbf{问题描述：}
+给定灰度像素序列 $\{p_1,p_2,\dots,p_n\}$，其中 $0\le p_i \le 255$。
+将序列划分为若干个\textbf{连续段} $S_1,S_2,\dots,S_m$。
+第 $i$ 段记为
+$S_i=\{p_{t_{i-1}+1},\dots,p_{t_i}\},$
+并用同一位宽存储该段内所有像素。
+设该段所需位宽为
+$b_i=\left\lceil \log_2\left(\max_{t_{i-1}+1\le k\le t_i}p_k + 1\right)\right\rceil,$
+且由题意有 $b_i\le 8$，因此存储 $b_i$ 需要 3 位；
+段长 $l_i=t_i-t_{i-1}$ 满足 $1\le l_i\le 255$，存储 $l_i$ 需要 8 位。
+因此每段头部开销为
+$3+8=11\ \text{位}.$
+目标是：\textbf{选择一种分段方式，使总存储位数最小}，且每段长度不超过 256。
+
+$$
+S[i]=\min_{1\le k\le \min(i,256)}
+\Bigl\{S[i-k]+k\cdot b_{\max}(i-k+1,i)\Bigr\}+11.
+$$
+
+\begin{verbatim}
+void Compress(int n, int p[], int S[], int L[], int b[])
+{
+    int Lmax = 256, header = 1;
+
+    S[0] = 0;
+
+    for (int i = 1; i <= n; i++) {           // 依次计算 S[1..n]
+        b[i] = length(p[i]);                 // 第 i 个元素所需位数
+
+        int bmax = b[i];
+        S[i] = S[i-1] + bmax;                // 先假设最后一段只含 p[i]
+        L[i] = i;
+
+        for (int j = 2; j <= i && j <= Lmax; j++) {   // j 表示最后一段长度
+            if (bmax < b[i-j+1]) bmax = b[i-j+1];      // 更新该段最大位宽
+
+            if (S[i] > S[i-j] + j * bmax) {            // 选择更优的分段
+                S[i] = S[i-j] + j * bmax;
+                L[i] = j;                               // 记录最后一段长度
+            }
+        }
+
+        S[i] += header;                                 // 加上该段头部开销
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+对每个 $i$，内层最多枚举 $j=1.. \min(i,Lmax)$，
+故时间复杂度为
+$O(n\cdot Lmax).$
+当 $Lmax=256$ 为常数时，可写为 $O(n).$
+空间复杂度主要来自数组 $S,L,b$，为 $O(n).$
+
+\subsection{电路布线问题（MNS）}
+
+\textbf{问题描述：}
+在电路布线问题中，给定若干条连线，
+每条连线用一对端点 $(i,\pi(i))$ 表示，
+其中 $i$ 表示左侧端点编号，$\pi(i)$ 表示其在右侧对应的端点编号。
+若两条连线 $(i,\pi(i))$ 与 $(t,\pi(t))$ 满足
+$i<t\ \text{但}\ \pi(i)>\pi(t),$
+则称这两条连线\textbf{相交}。
+问题的目标是：\textbf{从所有连线中选取一个最大的不相交子集}，使得任意两条被选中的连线都不相交。
+
+\textbf{边界条件：}
+当 $i=1$ 时
+\[
+\text{Size}(1,j)=
+\begin{cases}
+0, & j<\pi(1),\\
+1, & j\ge \pi(1).
+\end{cases}
+\]
+
+\textbf{状态转移方程：}
+当 $i>1$ 时，有如下递推关系：
+\[
+\text{Size}(i,j)=
+\begin{cases}
+\text{Size}(i-1,j), & j<\pi(i),\\[6pt]
+\max\bigl\{\text{Size}(i-1,j),\ \text{Size}(i-1,\pi(i)-1)+1\bigr\}, & j\ge \pi(i).
+\end{cases}
+\]
+
+\begin{verbatim}
+void MNS(int C[], int n, int **size)
+{
+    // 初始化 i=1 的情况
+    for (int j = 0; j < C[1]; j++) size[1][j] = 0;
+    for (int j = C[1]; j <= n; j++) size[1][j] = 1;
+    // 填表
+    for (int i = 2; i <= n; i++) {
+        for (int j = 0; j < C[i]; j++)
+            size[i][j] = size[i-1][j];
+        for (int j = C[i]; j <= n; j++)
+            size[i][j] = max(size[i-1][j], size[i-1][C[i]-1] + 1);
+    }
+    // 最终结果
+    size[n][n] = max(size[n-1][n],size[n-1][C[n]-1] + 1);
+}
+\end{verbatim}
+
+textbf{最优解构造（回溯）：}
+
+\begin{verbatim}
+void Traceback(int C[], int **size, int n, int Net[], int &m)
+{
+    int j = n;
+    m = 0;
+    for (int i = n; i > 1; i--) {
+        if (size[i][j] != size[i-1][j]) {
+            Net[m++] = i;          // 选择连线 i
+            j = C[i] - 1;
+        }
+    }
+    if (j >= C[1])
+        Net[m++] = 1;
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+状态表规模为 $O(n^2)$，
+每个状态计算时间为 $O(1)$，
+因此时间复杂度为$O(n^2),$
+空间复杂度为$O(n^2).$
+回溯过程仅需一次线性扫描，时间复杂度为 $O(n)$。
+
+\subsection{流水作业调度（两台机器 $M_1,M_2$）}
+
+\textbf{问题描述：}
+有 $n$ 个作业 $1,2,\dots,n$，需要在两台机器 $M_1,M_2$ 上依次加工。
+每个作业 $i$ 必须先在 $M_1$ 上加工 $a_i$ 时间，再在 $M_2$ 上加工 $b_i$ 时间（不允许改变顺序）。
+要求安排一个作业加工顺序，使得：
+第一个作业在机器 $M_1$ 上开始加工，
+最后一个作业在机器 $M_2$ 上完成加工的时间（即\textbf{完工时间}）最小。
+
+\textbf{状态转移方程：}
+由流水作业调度问题的最优子结构性质可知，
+\[
+T(N,0) = \min_{1 \leq i \leq n} \left\{ a_{i} + T(N-\{i\}, b_{i}) \right\}
+\]
+
+\[
+T(S,t) = \min_{i \in S} \left\{ a_{i} + T(S-\{i\}, b_{i} + \max\{t-a_{i}, 0\}) \right\}
+\]
+
+其中：
+\begin{itemize}
+  \item $a_j$：作业 $j$ 在 $M_1$ 的加工时间；
+  \item $T(S-\{j\},b_j)$：剩余作业子集的最优等待时间（将 $b_j$ 作为状态参数）；
+  \item $\max(t-a_j,0)$：由于 $M_2$ 的空闲/等待产生的额外影响项。
+\end{itemize}
+
+\textbf{结论：}
+流水作业调度问题在两台机器情形下具有最优子结构性质，
+可用集合型动态规划描述，其最优完成时间为
+$T(N,0).$
+
+\subsection{0-1 背包问题（特殊的整数规划问题）}
+
+\textbf{问题描述：}
+给定 $n$ 种物品和一个背包。第 $i$ 个物品的重量为 $w_i$、价值为 $v_i$，
+背包容量为 $C$。每个物品只能取 $0$ 或 $1$ 次（不可分割）。
+目标是在不超过容量 $C$ 的前提下，使装入背包的物品总价值最大。
+
+设决策变量
+$$
+x_i=
+\begin{cases}
+1, & \text{选取物品 } i,\\
+0, & \text{否则},
+\end{cases}
+\qquad i=1,2,\dots,n.
+$$
+
+则模型为
+$$
+\max \sum_{i=1}^{n} v_i x_i
+$$
+
+满足约束
+$$
+\sum_{i=1}^{n} w_i x_i \le C,\qquad x_i\in\{0,1\},\ 1\le i\le n.
+$$
+
+\textbf{子问题与状态定义：}
+定义子问题：当\textbf{可选物品为 $i,i+1,\dots,n$}，
+背包\textbf{容量为 $j$}（$0\le j\le C$）时的最优值记为
+$m(i,j).$
+也就是说，$m(i,j)$ 表示在约束
+$\sum_{k=i}^{n} w_k x_k \le j,\qquad x_k\in\{0,1\}\ (i\le k\le n)$下最大化
+$\sum_{k=i}^{n} v_k x_k$所能得到的最优目标值。
+
+\textbf{边界条件：}
+当只剩最后一个物品 $n$ 可选时，
+$$
+m(n,j)=
+\begin{cases}
+v_n, & j\ge w_n,\\
+0, & 0\le j < w_n.
+\end{cases}
+$$
+
+\textbf{状态转移方程（最优子结构）：}
+对 $i<n$，考虑物品 $i$ 的“选/不选”两种情况：
+\[
+m(i,j)=
+\begin{cases}
+\max\bigl\{m(i+1,j),\ m(i+1,j-w_i)+v_i\bigr\}, & j\ge w_i,\\[6pt]
+m(i+1,j), & 0\le j < w_i.
+\end{cases}
+\]
+
+\textbf{解释：}
+\begin{itemize}
+  \item 若 $j<w_i$，容量不足，物品 $i$ 不能选，只能继承后续子问题：$m(i,j)=m(i+1,j)$；
+  \item 若 $j\ge w_i$，可选择：
+  不选 $i$ 得 $m(i+1,j)$；选 $i$ 得 $m(i+1,j-w_i)+v_i$；
+  取两者最大即为最优。
+\end{itemize}
+
+\noindent\textbf{算法代码：}
+
+\begin{verbatim}
+template<class Type>
+void knapsack(Type v[], int w[], int c, int n, Type **m)
+{
+    int jMax = min(w[n] - 1, c);
+
+    // 初始化第 n 个物品这一行：m[n][j]
+    for (int j = 0; j <= jMax; j++)
+        m[n][j] = 0;
+    for (int j = w[n]; j <= c; j++)
+        m[n][j] = v[n];
+
+    // 从 i=n-1 递推到 2（最后单独处理 i=1）
+    for (int i = n - 1; i > 1; i--) {
+        jMax = min(w[i] - 1, c);
+
+        // j < w[i] 时装不下物品 i，只能继承 m[i+1][j]
+        for (int j = 0; j <= jMax; j++)
+            m[i][j] = m[i+1][j];
+
+        // j >= w[i] 时，取“选/不选”两种情况的最大值
+        for (int j = w[i]; j <= c; j++)
+            m[i][j] = max(m[i+1][j], m[i+1][j - w[i]] + v[i]);
+    }
+
+    // 单独处理 i=1（只计算 m[1][c]）
+    m[1][c] = m[2][c];
+    if (c >= w[1])
+        m[1][c] = max(m[1][c], m[2][c - w[1]] + v[1]);
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+需要填充大部分 $m[i][j]$（约 $n\times c$ 个状态），
+每个状态 $O(1)$ 转移，
+因此时间复杂度为
+$O(nc),$
+空间复杂度为二维表
+$O(nc).$
+
+\subsection{最优二叉搜索树（Optimal Binary Search Tree）}
+
+\textbf{问题描述：}
+给定有序关键字 $k_1<k_2<\cdots<k_n$。
+查找过程中可能命中关键字，也可能命中相邻关键字之间的“失败区间”。
+设成功查找 $k_i$ 的概率（或权值）为 $a_i$，
+失败查找落在区间之间的概率（或权值）为 $b_i$（通常 $b_0,\dots,b_n$）。
+要求构造一棵二叉搜索树，使得\textbf{平均查找代价}（期望比较次数）最小。
+
+\begin{verbatim}
+void OptimalBinarySearchTree(int a[], int b[], int n, int **m, int **s, int **w)
+{
+    // 初始化空区间：m[i+1][i] = 0，并给 w 的初值
+    for (int i = 0; i <= n; i++) {
+        w[i+1][i] = a[i];   // 以该课程版本的定义为准
+        m[i+1][i] = 0;
+    }
+
+    // r 表示区间长度：j = i + r
+    for (int r = 0; r < n; r++) {
+        for (int i = 1; i <= n - r; i++) {
+            int j = i + r;
+
+            // 计算 w[i][j]
+            w[i][j] = w[i][j-1] + a[j] + b[j];
+
+            // 先令 k=i 作为初值
+            m[i][j] = m[i+1][j];
+            s[i][j] = i;
+
+            // 枚举 k=i+1..j，寻找最优根
+            for (int k = i+1; k <= j; k++) {
+                int t = m[i][k-1] + m[k+1][j];
+                if (t < m[i][j]) {
+                    m[i][j] = t;
+                    s[i][j] = k;
+                }
+            }
+
+            // 最后统一加上 w[i][j]
+            m[i][j] += w[i][j];
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+共有 $O(n^2)$ 个区间状态 $(i,j)$，
+每个状态枚举 $k$ 需要 $O(n)$，
+因此时间复杂度为$O(n^3),$空间复杂度为三张 $n\times n$ 表，为$O(n^2).$
+
+\subsection{最大子段和（Maximum Subarray Sum）}
+
+\textbf{问题描述：}
+给定长度为 $n$ 的整数序列 $a[1..n]$，求其\textbf{连续子段}的最大和，即
+$\max_{1\le l\le r\le n}\ \sum_{k=l}^{r} a[k].$
+
+\textbf{状态定义：}
+令$b[j]$
+表示\textbf{以 $a[j]$ 结尾}的最大子段和，则有递推：
+$$b[j]=\max\{b[j-1]+a[j],\ a[j]\},\qquad 1\le j\le n.$$
+
+最终答案为$\max_{1\le j\le n} b[j].$
+
+\begin{verbatim}
+int MaxSum(int n, int *a)
+{
+    int sum = 0;   // 记录目前全局最大
+    int b = 0;     // 记录以当前位置结尾的最大子段和
+
+    for (int i = 1; i <= n; i++) {
+        if (b > 0) b = b + a[i];
+        else       b = a[i];
+
+        if (sum < b) sum = b;
+    }
+    return sum;
+}
+\end{verbatim}
+
+\textbf{复杂度：}
+时间复杂度 $O(n),$ 空间复杂度 $O(1).$
+
+\subsection{最大子矩阵和（Maximum Submatrix Sum）}
+
+\textbf{问题描述：}
+给定一个 $m\times n$ 的整数矩阵 $A$，
+求其元素和最大的子矩阵（连续行+连续列）。
+
+\textbf{核心思想：}
+固定子矩阵的上边界行 $i$ 与下边界行 $j$（$i\le j$），
+把第 $i..j$ 行之间的列元素累加成一个长度为 $n$ 的数组
+$b[k]=\sum_{t=i}^{j} A[t][k].$则此时“最佳子矩阵”在列方向上等价于求数组 $b[1..n]$ 的最大子段和。
+对所有 $(i,j)$ 枚举即可求最优。
+
+\begin{verbatim}
+int MaxSum2(int m, int n, int **a)
+{
+    int sum = 0;
+    int *b = new int[n+1];
+
+    for (int i = 1; i <= m; i++) {
+        for (int k = 1; k <= n; k++)
+            b[k] = 0;
+
+        for (int j = i; j <= m; j++) {
+            for (int k = 1; k <= n; k++)
+                b[k] += a[j][k];
+
+            int max = MaxSum(n, b);
+            if (max > sum) sum = max;
+        }
+    }
+    return sum;
+}
+\end{verbatim}
+
+\textbf{复杂度：}
+共有 $O(m^2)$ 组行边界 $(i,j)$，
+每次更新 $b$ 需要 $O(n)$，求最大子段和也需要 $O(n)$，
+所以时间复杂度为
+$O(m^2 n),$
+额外空间为数组 $b$，即 $O(n).$
+
+\subsection{最大 $m$ 子段和（Maximum $m$ Disjoint Subarrays Sum）}
+
+\textbf{问题描述：}
+给定序列 $a[1..n]$，要求选取\textbf{恰好 $m$ 段互不重叠的连续子段}，
+使得这些子段元素和的总和最大。
+
+\begin{verbatim}
+int MaxSum(int m, int n, int *a)
+{
+    if (n < m || m < 1) return 0;
+
+    int *b = new int[n+1];
+    int *c = new int[n+1];
+    b[0] = 0;
+    c[1] = 0;
+
+    for (int i = 1; i <= m; i++) {
+        b[i] = b[i-1] + a[i];
+        c[i-1] = b[i];
+
+        int maxv = b[i];
+        for (int j = i+1; j <= n-m+i; j++) {
+            b[j] = (b[j-1] > c[j-1] ? b[j-1] + a[j] : c[j-1] + a[j]);
+            c[j-1] = maxv;
+            if (maxv < b[j]) maxv = b[j];
+        }
+        c[i+n-m] = maxv;
+    }
+
+    int sum = 0;
+    for (int j = m; j <= n; j++)
+        if (sum < b[j]) sum = b[j];
+
+    return sum;
+}
+\end{verbatim}
+
+\textbf{复杂度：}
+两重循环规模约为 $m\times n$，
+因此时间复杂度为 $O(mn),$
+额外空间为 $b,c$ 两个数组，为 $O(n).$
+
+
+

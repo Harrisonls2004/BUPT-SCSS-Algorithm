@@ -1,0 +1,609 @@
+\section{回溯法}
+ 
+\subsection{回溯法的基本框架}
+
+\subsubsection{递归回溯}
+
+\textbf{思想说明：}
+回溯法对解空间树进行\textbf{深度优先搜索}。
+在一般情况下，回溯法采用\textbf{递归方式}实现。
+搜索过程中，逐层构造解向量，当到达叶结点时输出一个解；
+若当前部分解违反约束或不可能得到更优解，则进行剪枝。
+
+\begin{verbatim}
+void backtrack(int t)
+{
+    if (t > n) output(x);
+    else
+        for (int i = f(n,t); i <= g(n,t); i++) {
+            x[t] = h(i);
+            if (constraint(t) && bound(t))
+                backtrack(t + 1);
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+回溯法在最坏情况下需要遍历整个解空间树。
+若每一层有 $b$ 个分支、深度为 $n$，
+则最坏时间复杂度为$O(b^n).$
+实际运行中，由于约束函数和限界函数的剪枝作用，
+搜索规模通常会显著减小。
+
+\subsubsection{迭代回溯}
+
+\textbf{思想说明：}
+递归回溯可以用\textbf{非递归方式}实现，
+即采用树的非递归深度优先遍历方法。
+迭代回溯通过显式维护层号 $t$，
+模拟递归调用与回退过程。
+
+\begin{verbatim}
+void iterativeBacktrack()
+{
+    int t = 1;
+    while (t > 0) {
+        if (f(n,t) <= g(n,t))
+            for (int i = f(n,t); i <= g(n,t); i++) {
+                x[t] = h(i);
+                if (constraint(t) && bound(t)) {
+                    if (solution(t)) output(x);
+                    else t++;
+                }
+            }
+        else t--;
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+迭代回溯与递归回溯本质上遍历的是\textbf{同一棵解空间树}，
+因此在最坏情况下时间复杂度相同，
+仍为指数级 $O(b^n)$，
+仅实现方式不同。
+
+\subsubsection{子集树与排列树}
+
+\textbf{子集树：}
+子集树用于描述每个元素只有“取 / 不取”两种选择的问题，
+例如 0-1 背包、装载问题、最大团问题等。
+解空间是一棵\textbf{二叉树}。
+
+\begin{verbatim}
+void backtrack(int t)
+{
+    if (t > n) output(x);
+    else
+        for (int i = 0; i <= 1; i++) {
+            x[t] = i;
+            if (legal(t)) backtrack(t + 1);
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+子集树共有 $2^n$ 个叶结点，
+因此遍历子集树的时间复杂度为
+$O(2^n).$
+
+\textbf{排列树：}
+排列树用于描述需要枚举元素排列顺序的问题，
+例如旅行售货员问题、批处理作业调度问题等。
+解空间是一棵\textbf{多叉树}。
+
+\begin{verbatim}
+void backtrack(int t)
+{
+    if (t > n) output(x);
+    else
+        for (int i = t; i <= n; i++) {
+            swap(x[t], x[i]);
+            if (legal(t)) backtrack(t + 1);
+            swap(x[t], x[i]);
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+排列树共有 $n!$ 个叶结点，
+因此遍历排列树的时间复杂度为$O(n!).$
+
+\subsection{装载问题（回溯法）}
+
+\textbf{问题描述：}
+有一批共 $n$ 个集装箱，需要装载到两艘轮船上，
+两艘轮船的载重量分别为 $c_1$ 和 $c_2$。
+第 $i$ 个集装箱的重量为 $w_i$，
+且满足
+$\sum_{i=1}^n w_i \le c_1 + c_2.$
+装载问题要求判断是否存在一种合理的装载方案，
+使得所有集装箱均能被装入这两艘轮船中。
+
+\textbf{问题转化：}
+若第一艘轮船尽可能多地装载集装箱，剩余集装箱自然装入第二艘轮船。因此，该问题可转化为：
+从 $n$ 个集装箱中选择一个子集，
+使其总重量不超过 $c_1$，
+且尽可能接近 $c_1$。
+这等价于一个特殊的 \textbf{0-1 背包问题}，
+可采用 \textbf{回溯法} 求解。
+
+\begin{verbatim}
+void backtrack(int i)
+{
+    if (i > n) {            // 到达叶结点
+        bestw = cw;         // 更新最优解
+        return;
+    }
+
+    r -= w[i];              // 更新剩余重量
+
+    if (cw + w[i] <= c) {   // 搜索左子树（装第 i 个）
+        x[i] = 1;
+        cw += w[i];
+        backtrack(i + 1);
+        cw -= w[i];
+    }
+
+    if (cw + r > bestw) {   // 搜索右子树（不装第 i 个）
+        x[i] = 0;
+        backtrack(i + 1);
+    }
+
+    r += w[i];              // 回退到上一层
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+装载问题的解空间为一棵子集树，
+共有 $2^n$ 个叶结点。
+在最坏情况下，回溯算法需要遍历整个解空间，
+其时间复杂度为$O(2^n).$
+但通过可行性约束和上界函数进行剪枝，
+实际搜索规模通常远小于 $2^n$。
+在一般情况下，
+若 $n$ 较大且要求多次求解，
+可采用动态规划算法求解。
+
+\subsection{批处理作业调度问题（回溯法）}
+
+\textbf{问题描述：}
+给定 $n$ 个作业的集合 $\{J_1,J_2,\dots,J_n\}$，
+每个作业必须先在机器 $1$ 上加工，
+然后在机器 $2$ 上加工。
+作业 $J_i$ 在机器 $k$ 上的处理时间记为 $M[i][k]$。
+对于一个确定的作业调度顺序，
+设 $f_2$ 为所有作业在机器 $2$ 上完成加工的总时间，
+则该调度的完成时间为 $f_2$。
+
+\textbf{目标：}
+确定一种作业加工顺序，
+使得所有作业在机器 $2$ 上完成的总时间最小。
+
+\begin{verbatim}
+void Flowshop::Backtrack(int i)
+{
+    if (i > n) {
+        for (int j = 1; j <= n; j++)
+            bestx[j] = x[j];
+        bestf = f;
+    }
+    else
+        for (int j = i; j <= n; j++) {
+            f1 += M[x[j]][1];
+            f2[i] = (f2[i-1] > f1 ? f2[i-1] : f1) + M[x[j]][2];
+            f += f2[i];
+
+            if (f < bestf) {
+                swap(x[i], x[j]);
+                Backtrack(i + 1);
+                swap(x[i], x[j]);
+            }
+
+            f1 -= M[x[j]][1];
+            f -= f2[i];
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+批处理作业调度问题的解空间是一棵排列树，
+最多包含 $n!$ 个叶结点。
+在最坏情况下，回溯算法需要遍历整个排列空间，
+时间复杂度为$O(n!).$
+通过限界函数进行剪枝，
+可以在实际运行中大幅减少搜索结点数，
+但该问题本质上仍是一个 \textbf{NP-难问题}。
+
+\subsection{符号三角形问题（回溯法）}
+
+\textbf{问题描述：}
+符号三角形由符号 “$+$” 和 “$-$” 组成。
+设第一行有 $n$ 个符号，其余各行由上一行相邻两个符号决定：
+若两个符号相同，则下一行对应位置为 “$+$”；
+若两个符号不同，则下一行对应位置为 “$-$”。
+整个三角形共有$\frac{n(n+1)}{2}$个符号。
+符号三角形问题要求：  
+\textbf{对于给定的 $n$，计算有多少种不同的符号三角形，使得其中 “$+$” 和 “$-$” 的个数相同。}
+
+\begin{verbatim}
+void Triangle::Backtrack(int t)
+{
+    if ((count > half) || (t*(t+1)/2 - count > half))
+        return;
+
+    if (t > n)
+        sum++;
+    else
+        for (int i = 0; i < 2; i++) {   // {0,1} -> {+, -}
+            p[1][t] = i;
+            count += i;
+
+            for (int j = 2; j <= t; j++) {
+                p[j][t-j+1] = p[j-1][t-j+1] + p[j-1][t-j+2];
+                count += p[j][t-j+1];
+            }
+
+            Backtrack(t + 1);
+
+            for (int j = 2; j <= t; j++)
+                count -= p[j][t-j+1];
+
+            count -= i;
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}该问题的解空间为一棵子集树，规模为 $2^n$；
+每一次可行性判断与符号生成的代价为 $O(n)$；
+因此在最坏情况下，算法时间复杂度为$O(n2^n).$
+通过可行性约束进行剪枝，
+可以显著减少实际搜索规模，
+但该问题本质上仍属于指数级复杂度问题。
+
+\subsection{n 后问题（回溯法）}
+
+\textbf{问题描述：}
+在一个 $n \times n$ 的棋盘上放置 $n$ 个皇后，
+使得任意两个皇后之间都不能互相攻击。
+按照国际象棋规则，
+皇后可以攻击与其处在同一行、同一列或同一条对角线上的棋子。
+$n$ 后问题要求计算在棋盘上放置 $n$ 个皇后的所有可行方案数。
+
+\textbf{可行性检测函数：}
+\begin{verbatim}
+bool Queen::Place(int k)
+{
+    for (int j = 1; j < k; j++)
+        if ((abs(x[j] - x[k]) == abs(j - k)) || (x[j] == x[k]))
+            return false;
+    return true;
+}
+\end{verbatim}
+
+\textbf{回溯算法代码：}
+
+\begin{verbatim}
+void Queen::Backtrack(int t)
+{
+    if (t > n)
+        sum++;
+    else
+        for (int i = 1; i <= n; i++) {
+            x[t] = i;
+            if (Place(t))
+                Backtrack(t + 1);
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+$n$ 后问题的解空间是一棵排列树，
+最多包含 $n!$ 个叶结点。
+在最坏情况下，
+回溯算法需要遍历整个排列空间，
+其时间复杂度为
+$O(n!).$
+通过可行性检测函数进行剪枝，
+可以显著减少实际搜索规模，
+但该问题仍属于指数时间复杂度问题。
+
+
+\subsection{0-1 背包问题（回溯法）}
+
+\textbf{问题描述：}
+给定 $n$ 个物品，
+第 $i$ 个物品的重量为 $w_i$，价值为 $p_i$，
+背包容量为 $c_1$。
+每个物品只能选择“装入”或“不装入”一次。
+目标是在不超过背包容量的前提下，
+使装入物品的总价值最大。
+
+\textbf{回溯算法代码：}
+\begin{verbatim}
+template<class Typew, class Typep>
+void Knap<Typew, Typep>::Backtrack(int i)
+{
+    if (i > n) {
+        bestp = cp;
+        return;
+    }
+
+    if (cw + w[i] <= c) {
+        cw += w[i];
+        cp += p[i];
+        Backtrack(i + 1);
+        cw -= w[i];
+        cp -= p[i];
+    }
+
+    if (Bound(i + 1) > bestp)
+        Backtrack(i + 1);
+}
+\end{verbatim}
+
+\textbf{上界函数代码：}
+\begin{verbatim}
+template<class Typew, class Typep>
+Typep Knap<Typew, Typep>::Bound(int i)
+{
+    Typew cleft = c - cw;
+    Typep b = cp;
+
+    while (i <= n && w[i] <= cleft) {
+        cleft -= w[i];
+        b += p[i];
+        i++;
+    }
+
+    if (i <= n)
+        b += p[i] / w[i] * cleft;
+
+    return b;
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+0-1 背包问题的解空间为一棵子集树，
+最坏情况下共有 $2^n$ 个叶结点。
+回溯算法在最坏情况下需要遍历整个解空间，
+时间复杂度为$O(2^n).$
+通过上界函数进行剪枝，
+可以显著减少实际搜索规模，
+但该问题本质上仍属于指数时间复杂度问题。
+
+\subsection{最大团问题（回溯法）}
+
+\textbf{问题描述：}
+给定无向图 $G=(V,E)$。
+若 $U\subseteq V$，且对任意 $u,v\in U$，都有 $(u,v)\in E$，
+则称 $U$ 为图 $G$ 的一个团。
+若 $U$ 不包含于任何更大的团中，则称其为极大团。
+图 $G$ 中顶点数最多的团称为 \textbf{最大团}。
+最大团问题要求找出图 $G$ 的一个最大团。
+
+\begin{verbatim}
+void Clique::Backtrack(int i)
+{
+    if (i > n) {
+        for (int j = 1; j <= n; j++)
+            bestx[j] = x[j];
+        return;
+    }
+
+    bool OK = true;
+    for (int j = 1; j < i; j++)
+        if (x[j] && !a[i][j]) {
+            OK = false;
+            break;
+        }
+
+    if (OK) {
+        x[i] = 1;
+        cn++;
+        Backtrack(i + 1);
+        cn--;
+    }
+
+    if (cn + n - i > bestn) {
+        x[i] = 0;
+        Backtrack(i + 1);
+    }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+最大团问题的解空间规模为 $2^n$。
+在最坏情况下，回溯算法需要遍历整个子集树，
+其时间复杂度为
+$O(2^n).$
+该问题是典型的 NP-难问题。
+
+\subsection{图的 m 着色问题（回溯法）}
+
+\textbf{问题描述：}
+给定无向连通图 $G=(V,E)$ 和 $m$ 种不同的颜色，
+要求用这 $m$ 种颜色对图中每个顶点着色，
+使得任意一条边的两个端点颜色不同。
+判断图是否存在一种合法的 $m$ 着色方案。
+
+\textbf{回溯算法代码：}
+\begin{verbatim}
+void Color::Backtrack(int t)
+{
+    if (t > n)
+        sum++;
+    else
+        for (int i = 1; i <= m; i++) {
+            x[t] = i;
+            if (OK(t))
+                Backtrack(t + 1);
+        }
+}
+\end{verbatim}
+
+\textbf{可行性检测函数：}
+\begin{verbatim}
+bool Color::OK(int k)
+{
+    for (int j = 1; j < k; j++)
+        if (a[k][j] && x[j] == x[k])
+            return false;
+    return true;
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+图的 m 着色问题的解空间为 $m^n$。
+在最坏情况下，
+回溯算法需要遍历整个解空间，
+时间复杂度为$O(m^n).$该问题是 NP-完全问题。
+
+\subsection{旅行售货员问题（回溯法）}
+
+\textbf{问题描述：}
+设有 $n$ 个城市，
+已知任意两个城市之间的距离。
+旅行售货员从某一城市出发，
+需要恰好访问每个城市一次，
+并最终返回出发城市，
+要求使得总旅行距离最短。
+
+\begin{verbatim}
+template<class Type>
+void Traveling<Type>::Backtrack(int i)
+{
+    if (i == n) {
+        if (a[x[n-1]][x[n]] != NoEdge &&
+            a[x[n]][x[1]] != NoEdge &&
+            (cc + a[x[n-1]][x[n]] + a[x[n]][x[1]] < bestc
+             || bestc == NoEdge)) {
+            bestc = cc + a[x[n-1]][x[n]] + a[x[n]][x[1]];
+        }
+    }
+    else
+        for (int j = i; j <= n; j++) {
+            if (a[x[i-1]][x[j]] != NoEdge &&
+                (cc + a[x[i-1]][x[j]] < bestc
+                 || bestc == NoEdge)) {
+                swap(x[i], x[j]);
+                cc += a[x[i-1]][x[i]];
+                Backtrack(i + 1);
+                cc -= a[x[i-1]][x[i]];
+                swap(x[i], x[j]);
+            }
+        }
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+旅行售货员问题的解空间规模为 $(n-1)!$。
+在最坏情况下，
+回溯算法需要遍历所有排列，
+时间复杂度为$O(n!).$
+该问题是经典的 NP-难问题。
+
+\subsection{圆排列问题（回溯法）}
+
+\textbf{问题描述：}
+给定 $n$ 个大小不等的圆，
+其半径分别为 $c_1,c_2,\dots,c_n$。
+现要求将这 $n$ 个圆排列在一条水平直线上，
+使所有圆都与水平线相切，
+且整体排列所占的长度最小。
+圆排列问题要求确定一种排列顺序，
+使得最左端到最右端的距离最小。
+
+\textbf{回溯算法代码：}
+\begin{verbatim}
+void Circle::Backtrack(int t)
+{
+    if (t > n)
+        Compute();
+    else
+        for (int j = t; j <= n; j++) {
+            swap(r[t], r[j]);
+            if (Center(t) < best)
+                Backtrack(t + 1);
+            swap(r[t], r[j]);
+        }
+}
+\end{verbatim}
+
+\textbf{圆心计算函数：}
+\begin{verbatim}
+float Circle::Center(int t)
+{
+    float temp = 0;
+    for (int j = 1; j < t; j++) {
+        float value = x[j] + 2.0 * sqrt(r[j] * r[t]);
+        if (value > temp)
+            temp = value;
+    }
+    x[t] = temp;
+
+    float low = 0, high = 0;
+    for (int i = 1; i <= t; i++) {
+        if (x[i] - r[i] < low)
+            low = x[i] - r[i];
+        if (x[i] + r[i] > high)
+            high = x[i] + r[i];
+    }
+    if (high - low < best)
+        best = high - low;
+
+    return x[t];
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+圆排列问题的解空间为一棵排列树，
+最坏情况下需要枚举 $n!$ 种排列。
+在每个结点需要 $O(n)$ 时间计算排列长度，
+因此算法在最坏情况下的时间复杂度为
+$O(n \cdot n!).$
+
+\subsection{连续邮资问题（回溯法）}
+
+\textbf{问题描述：}
+假设国家发行了 $n$ 种不同面值的邮票，
+并规定每封信封上最多允许贴 $m$ 张邮票。
+连续邮资问题要求确定这 $n$ 种邮票的面值，
+使得在最多贴 $m$ 张邮票的条件下，
+从 $1$ 开始可以连续表示的邮资区间尽可能大。
+
+\begin{verbatim}
+void Stamp::Backtrack(int t)
+{
+    if (t > n) {
+        if (r[n] > maxvalue) {
+            maxvalue = r[n];
+            for (int j = 1; j <= n; j++)
+                bestx[j] = x[j];
+        }
+        return;
+    }
+
+    int *z = new int[maxx + 1];
+    for (int i = 1; i <= maxx; i++)
+        z[i] = y[i];
+
+    for (int i = x[t-1] + 1; i <= r[t-1] + 1; i++) {
+        x[t] = i;
+        for (int k = 1; k <= maxx; k++)
+            y[k] = z[k];
+
+        Update(t);
+        Backtrack(t + 1);
+    }
+
+    for (int k = 1; k <= maxx; k++)
+        y[k] = z[k];
+    delete[] z;
+}
+\end{verbatim}
+
+\textbf{复杂度分析：}
+连续邮资问题的解空间规模随 $n$ 和 $m$ 急剧增长，
+在最坏情况下，
+回溯算法需要枚举大量组合，
+时间复杂度为指数级。

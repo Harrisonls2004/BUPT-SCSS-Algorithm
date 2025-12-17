@@ -1,0 +1,354 @@
+\section{贪心算法}
+
+贪心算法在求解优化问题时，每一步都作出一个当前看来“最优”的选择，
+期望通过一系列局部最优决策得到全局最优解。
+贪心算法的关键在于：\textbf{问题必须具有贪心选择性质和最优子结构}。
+
+\subsection{活动选择问题}
+
+\textbf{问题描述：}
+设有 $n$ 个活动 $A_1,A_2,\dots,A_n$，
+每个活动 $A_i$ 有开始时间 $s_i$ 和结束时间 $f_i$，
+同一时间只能进行一个活动。
+目标是从中选择尽可能多的\textbf{互不冲突的活动}。
+
+\textbf{贪心策略：}按活动的\textbf{结束时间从小到大排序}；每次选择\textbf{当前结束时间最早且与已选活动不冲突的活动}。该策略可以保证给后续活动留下尽可能多的时间，因此是全局最优的。
+
+\begin{verbatim}
+void GreedySelector(int n, int s[], int f[], bool A[])
+{
+    A[1] = true;          // 选择第一个活动
+    int j = 1;
+
+    for (int i = 2; i <= n; i++) {
+        if (s[i] >= f[j]) {
+            A[i] = true; // 选择活动 i
+            j = i;
+        } else {
+            A[i] = false;
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+若活动已排序，则算法时间复杂度为$O(n).$若需要先排序，则总体复杂度为$O(n\log n).$
+
+\subsection{分数背包问题（Fractional Knapsack）}
+
+\textbf{问题描述：}
+给定 $n$ 个物品，第 $i$ 个物品重量为 $w_i$，价值为 $v_i$，
+背包容量为 $M$。与 0--1 背包不同，\textbf{每个物品允许取任意比例}。
+目标是在不超过容量 $M$ 的前提下，使装入背包的总价值最大。
+
+\textbf{贪心策略：}按物品的\textbf{单位重量价值} $\frac{v_i}{w_i}$ 从大到小排序；
+依次尽可能多地装入单位价值最高的物品；
+若剩余容量不足以装入整个物品，则装入该物品的一部分并结束。
+该策略能保证每一步都优先获得最大“单位收益”，因此可以得到全局最优解。
+
+\begin{verbatim}
+void Knapsack(int n, float M, float v[], float w[], float x[])
+{
+    Sort(n, v, w);    // 按 v[i]/w[i] 从大到小排序
+
+    for (int i = 1; i <= n; i++)
+    x[i] = 0;
+
+    float c = M;
+    int i;
+
+    for (i = 1; i <= n; i++) {
+        if (w[i] > c) break;   // 剩余容量不足，无法装入整个物品 i
+        x[i] = 1;              // 装入整个物品 i
+        c -= w[i];
+    }
+
+    if (i <= n) x[i] = c / w[i];   // 装入物品 i 的一部分
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+排序耗时 $O(n\log n)$，装包过程为 $O(n)$，
+因此总体时间复杂度为
+$O(n\log n).$
+
+\subsection{最优装载问题（Optimal Loading）}
+
+\textbf{问题描述：}
+有 $n$ 个货箱，第 $i$ 个货箱的重量为 $w_i$，
+现有一艘载重能力为 $C$ 的船。
+要求选择若干个货箱装入船中，
+使得\textbf{装入货箱的数量尽可能多}，且总重量不超过船的载重能力 $C$。
+
+\textbf{贪心策略：}优先装载\textbf{重量较小的货箱}；
+每次选择当前剩余货箱中重量最小者装入船中；
+当剩余载重不足以装下下一个货箱时，算法结束。
+该策略保证在相同载重条件下，能够装入尽可能多的货箱，因此是最优的。
+
+\begin{verbatim}
+void Loading(int x[], int w[], int C, int n)
+{
+    int *t = new int[n+1];     // t[i] 存放排序后的货箱下标
+
+    Sort(w, t, n);             // 按重量 w 从小到大排序，结果存入 t
+
+    for (int i = 1; i <= n; i++)
+        x[i] = 0;              // 初始化：不装任何货箱
+
+    for (int i = 1; i <= n && w[t[i]] <= C; i++) {
+        x[t[i]] = 1;           // 装入编号为 t[i] 的货箱
+        C -= w[t[i]];          // 更新剩余载重
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+排序过程需要 $O(n\log n)$ 时间，
+装载过程最多遍历一次货箱，为 $O(n)$，
+因此算法的总体时间复杂度为
+$O(n\log n).$
+
+\textbf{空间复杂度：}
+额外使用了数组 \verb|t| 和 \verb|x|，空间复杂度为
+$O(n).$
+
+\subsection{哈夫曼编码（Huffman Coding）}
+
+\textbf{问题描述：}
+给定一组字符及其出现频率（或权值）$\{c_1,c_2,\dots,c_n\}$，
+要求为每个字符设计一个二进制编码，使得：
+编码满足\textbf{前缀码}性质（任一字符的编码不是另一个字符编码的前缀）；
+所有字符编码后的\textbf{加权路径长度（WPL）}最小。
+
+其中，加权路径长度定义为
+$
+\text{WPL}=\sum_{i=1}^{n} w_i \cdot l_i,
+$
+$w_i$ 为字符 $i$ 的频率（权值），$l_i$ 为其编码长度。
+
+\textbf{贪心策略：}
+在当前所有结点中，反复选取\textbf{权值最小的两个结点}；
+将这两个结点合并为一个新结点，新结点的权值为二者权值之和；
+将新结点重新插入集合中，重复上述过程，直到只剩一个结点。
+该策略保证每一步的局部最优选择（合并最小权值结点）
+最终得到全局最优的哈夫曼树。
+
+\begin{verbatim}
+void Huffman(int w[], int n)
+{
+    MinHeap<HuffmanNode> Q;
+
+    Initialize(Q, w, n);   // 将 n 个权值初始化到最小堆中
+
+    HuffmanNode x, y, z;
+
+    for (int i = 1; i < n; i++) {
+        Q.deleteMin(x);    // 取出权值最小的结点 x
+        Q.deleteMin(y);    // 取出权值次小的结点 y
+
+        z.MakeTree(x, y);  // 合并 x 和 y 为一棵新树
+        z.weight = x.weight + y.weight;
+
+        Q.insert(z);       // 将新结点插回最小堆
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+最小堆初始化需要 $O(n)$ 时间，
+合并过程中共进行 $n-1$ 次循环，
+每次包含两次删除最小值和一次插入操作，
+每个堆操作时间为 $O(\log n)$，
+因此总时间复杂度为
+$O(n\log n).$
+
+\subsection{单源最短路径问题（Dijkstra 算法）}
+
+\textbf{问题描述：}
+给定一个带非负权值的有向图（或无向图） $G=(V,E)$，
+其中每条边 $(u,v)$ 的权值为 $c(u,v)\ge 0$。
+指定一个源点 $v\in V$，
+要求计算从源点 $v$ 到图中其余各顶点的\textbf{最短路径长度}，
+并可同时记录对应的最短路径。
+
+\begin{verbatim}
+void Dijkstra(int n, int v, Type c[][MAXN], Type dist[], int prev[])
+{
+    bool S[MAXN];
+
+    for (int i = 1; i <= n; i++) {
+        dist[i] = c[v][i];   // 初始化距离
+        S[i] = false;        // 初始时所有顶点均未加入 S
+        if (dist[i] < maxint) prev[i] = v;
+        else prev[i] = -1;
+    }
+
+    dist[v] = 0;
+    S[v] = true;             // 源点加入 S
+
+    for (int i = 1; i < n; i++) {
+        Type temp = maxint;
+        int u = v;
+
+        // 在 V-S 中寻找 dist 最小的顶点 u
+        for (int j = 1; j <= n; j++) {
+            if (!S[j] && dist[j] < temp) {
+                u = j;
+                temp = dist[j];
+            }
+        }
+
+        S[u] = true;         // 将 u 加入 S
+
+        // 用 u 松弛其邻接点
+        for (int j = 1; j <= n; j++) {
+            if (!S[j] && c[u][j] < maxint) {
+                Type newdist = dist[u] + c[u][j];
+                if (newdist < dist[j]) {
+                    dist[j] = newdist;
+                    prev[j] = u;
+                }
+            }
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+在该实现中每一轮需在 $O(n)$ 时间内寻找最小的 $dist$；共进行 $n-1$ 轮。
+因此总时间复杂度为$O(n^2).$
+
+\subsection{最小生成树（Minimum Spanning Tree）}
+
+给定一个\textbf{连通无向带权图} $G=(V,E)$，
+其中每条边 $(u,v)$ 具有权值 $w(u,v)$。
+最小生成树（MST）是指一棵：包含图中所有顶点；边数为 $|V|-1$；总权值之和最小的生成树。
+
+下面介绍两种经典的贪心算法：\textbf{Prim 算法}和 \textbf{Kruskal 算法}。
+
+\subsubsection{Prim 算法}
+
+\textbf{基本思想：}
+Prim 算法从某个起始顶点出发，
+逐步扩展一棵生成树。
+在每一步中，选择一条\textbf{连接当前生成树与外部顶点的最小权值边}，
+将该边及其对应的顶点加入生成树。
+
+\begin{verbatim}
+void Prim(int n, Type c[][MAXN])
+{
+    bool S[MAXN];
+    Type lowcost[MAXN];
+    int closest[MAXN];
+
+    // 初始化：从顶点 1 开始
+    for (int i = 1; i <= n; i++) {
+        S[i] = false;
+        lowcost[i] = c[1][i];
+        closest[i] = 1;
+    }
+    S[1] = true;
+
+    for (int i = 1; i < n; i++) {
+        Type min = maxint;
+        int j = 1;
+
+        // 选择距离生成树最近的顶点 j
+        for (int k = 2; k <= n; k++) {
+            if (!S[k] && lowcost[k] < min) {
+                min = lowcost[k];
+                j = k;
+            }
+        }
+
+        S[j] = true;   // 将顶点 j 加入生成树
+
+        // 更新其余顶点到生成树的最小距离
+        for (int k = 2; k <= n; k++) {
+            if (!S[k] && c[j][k] < lowcost[k]) {
+                lowcost[k] = c[j][k];
+                closest[k] = j;
+            }
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}该实现中每次选择最小边需 $O(n)$，共进行 $n-1$ 次，因此时间复杂度为$O(n^2)$。
+
+\subsubsection{Kruskal 算法}
+
+\textbf{基本思想：}
+Kruskal 算法从\textbf{边的角度}构造最小生成树：将所有边按权值从小到大排序；
+依次选择当前权值最小且\textbf{不会形成回路}的边；
+直到选取 $|V|-1$ 条边为止。
+
+\begin{verbatim}
+void Kruskal(int n, int m, Edge edges[])
+{
+    MinHeap<Edge> H;
+    UnionFind U(n);
+
+    for (int i = 1; i <= m; i++)
+        H.insert(edges[i]);   // 将所有边加入最小堆
+
+    int k = 0;   // 已选边数
+    while (k < n-1 && !H.empty()) {
+        Edge x;
+        H.deleteMin(x);       // 取出权值最小的边
+
+        int a = U.Find(x.u);
+        int b = U.Find(x.v);
+
+        if (a != b) {         // 不形成回路
+            k++;
+            U.Union(a, b);    // 合并两个连通分量
+        }
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}边排序（或最小堆）需要 $O(m\log m)$；并查集操作近似为 $O(1)$；
+因此总体时间复杂度为$O(m\log m)$。
+
+\textbf{算法比较：} Prim 算法适合\textbf{稠密图}；
+Kruskal 算法适合\textbf{稀疏图}；
+二者均为贪心算法，且都能正确求得最小生成树。
+
+\subsection{多机调度问题（Multi-machine Scheduling）}
+
+\textbf{问题描述：}
+设有 $n$ 个相互独立的作业 $J_1,J_2,\dots,J_n$，
+以及 $m$ 台相同的机器 $M_1,M_2,\dots,M_m$。
+第 $i$ 个作业的处理时间为 $p_i$。
+每个作业可以在\textbf{任意一台机器}上加工，但\textbf{同一时刻一台机器只能加工一个作业}，
+且\textbf{作业一旦开始加工不能中断}。目标是：
+\textbf{合理安排作业顺序与分配方案，使所有作业完成的总时间（完工时间，makespan）最小。}
+
+该问题是一个经典的 \textbf{NP-完全问题}，
+目前不存在多项式时间的精确算法，通常采用贪心策略设计近似算法。
+
+\textbf{贪心策略（最长作业优先，LPT）：}
+将所有作业按处理时间 $p_i$ \textbf{从大到小排序}；
+依次将当前作业分配给\textbf{当前负载最小（最早空闲）的机器}。
+该策略的直观思想是：
+\textbf{优先处理耗时最长的作业，避免其被推迟到后期造成整体完成时间过大。}
+
+\textbf{算法步骤说明：}
+\begin{itemize}
+  \item 当 $n \le m$ 时，可直接将每个作业分配给一台机器，
+        总完成时间为 $\max\{p_1,p_2,\dots,p_n\}$；
+  \item 当 $n > m$ 时：
+    \begin{enumerate}
+      \item 按作业处理时间从大到小排序；
+      \item 维护每台机器的当前完成时间；
+      \item 每次选择当前完成时间最小的机器分配下一个作业。
+    \end{enumerate}
+\end{itemize}
+
+\textbf{时间复杂度：}
+\begin{itemize}
+  \item 作业排序需要 $O(n\log n)$；
+  \item 作业分配过程可在 $O(n\log m)$（使用优先队列）或 $O(nm)$ 时间内完成；
+\end{itemize}
+因此整体时间复杂度为$O(n\log n).$

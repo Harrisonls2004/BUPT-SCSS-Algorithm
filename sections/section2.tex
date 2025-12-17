@@ -1,0 +1,568 @@
+\section{递归与分治}
+
+\subsection{阶乘函数（Factorial）}
+
+\textbf{定义与递归式：}
+阶乘用于表示从 $1$ 到 $n$ 的连乘积（约定 $0!=1$）：  
+$n! = \prod_{k=1}^{n} k$。  
+递归定义通常写成：
+$$
+n! =
+\begin{cases}
+1, & n=0,\\
+n\cdot (n-1)!, & n>0.
+\end{cases}
+$$
+$$
+n! = 1\cdot 2\cdot \cdots \cdot (n-1)\cdot n
+= n\cdot \bigl(1\cdot 2\cdot \cdots \cdot (n-1)\bigr)
+= n\cdot (n-1)!.
+$$
+
+\textbf{递归计算的时间复杂度：}若用递归实现，每次调用把 $n$ 减 $1$：  
+$T(n)=T(n-1)+O(1)$，展开得 $T(n)=O(n)$。递归深度为 $n$，因此额外栈空间也为 $O(n)$。
+
+\textbf{等价的迭代写法：}循环从 $1$ 乘到 $n$，时间仍为 $O(n)$，空间可做到 $O(1)$。
+
+\subsection{斐波那契数列}
+$$
+F(n)=
+\begin{cases}
+1, & n=0,\\
+1, & n=1,\\
+F(n-1)+F(n-2), & n>1.
+\end{cases}
+$$
+
+\textbf{代码：}$\texttt{if (n<=1) return 1; else return F(n-1)+F(n-2);}$  
+
+\textbf{朴素递归时间复杂度：}设递归实现的运行时间为 $T(n)$，则$T(n)=T(n-1)+T(n-2)+O(1).$
+它与斐波那契增长同阶，解的数量级为指数级：
+$
+T(n)=\Theta(\varphi^{\,n}),
+\qquad
+\varphi=\frac{1+\sqrt{5}}{2}.
+$
+因此朴素递归在 $n$ 稍大时就会爆炸性变慢。
+
+\subsection{Ackermann函数（双递归函数）}
+
+$$
+A(1,0)=2,
+$$
+$$
+A(0,m)=1,\quad m\ge 0,
+$$
+$$
+A(n,0)=n+2,\quad n\ge 2,
+$$
+$$
+A(n,m)=A\bigl(A(n-1,m),\,m-1\bigr),\quad m\ge 1.
+$$
+
+\subsection{排列问题}
+
+\begin{verbatim}
+template <class Type>
+void Perm(Type list[], int k, int m) {
+    if (k == m) {                      // 递归终止条件：只剩一个元素
+        for (int i = 0; i <= m; i++)   // 输出当前排列
+            cout << list[i];
+        cout << endl;
+    } 
+    else {                             // 递归生成排列
+        for (int i = k; i <= m; i++) {
+            Swap(list[k], list[i]);    // 交换元素到当前位置k
+            Perm(list, k + 1, m);      // 递归生成剩余元素的排列
+            Swap(list[k], list[i]);    // 恢复原始顺序（回溯）
+        }
+    }
+}
+template <class Type>
+inline void Swap(Type &a, Type &b) {
+    Type temp = a;
+    a = b;
+    b = temp;
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+全排列的总数为 $n!$，  
+任何生成全部排列的算法，其时间复杂度至少为
+$\Omega(n!).$
+
+\subsection{整数划分问题}
+
+\textbf{问题定义：}把正整数 $n$ 表示成若干个正整数之和，且加数\textbf{不考虑顺序}，称为 $n$ 的一个整数划分。
+
+\begin{verbatim}
+int q(int n, int m) {
+    if ((n < 1) || (m < 1)) return 0;     // 非法输入返回0
+    if ((n == 1) || (m == 1)) return 1;  // 基准情况
+    if (n < m) return q(n, n);            // 划分数不能超过n本身
+    if (n == m) return 1 + q(n, n-1);
+    if (n > m) return q(n, m-1) + q(n-m, m);  
+\end{verbatim}
+
+\subsection{求解线性递推关系}
+
+\textbf{问题描述：}
+
+给定递推关系
+$$
+\begin{cases}
+X_{n+1}=X_n+12X_{n-1}, & n\ge 1,\\
+X_0=1,\quad X_1=0.5.
+\end{cases}
+$$
+
+\textbf{判断递推类型}
+该递推关系只包含 $X_{n+1},X_n,X_{n-1}$，系数为常数，且右端无常数项，因此是\textbf{二阶常系数齐次线性递推关系}。
+
+\textbf{(1)写出特征方程}
+
+设 $X_n=r^n$，代入得
+$
+r^{n+1}=r^n+12r^{n-1}.
+$
+
+两边除以 $r^{n-1}$ 得$r^2=r+12,$
+即$r^2-r-12=0.$
+
+\textbf{(2)求解特征方程}
+
+$(r-4)(r+3)=0,$
+$r_1=4,r_2=-3.$
+
+\textbf{(3)通解形式}
+
+$X_n=C_1(-3)^n+C_2 4^n.$
+
+\textbf{(4)利用初始条件求常数}
+$
+\begin{cases}
+C_1+C_2=1,\\
+-3C_1+4C_2=0.5.
+\end{cases}
+$
+
+\textbf{(5)解方程组}$C_1=0.5,C_2=0.5.$
+
+\textbf{(6)最终通项公式}
+
+$
+\boxed{X_n=0.5(-3)^n+0.5\cdot 4^n}
+$
+
+\textbf{理解要点总结：}
+假设指数解；构造特征方程；不同特征根对应指数项线性组合；初始条件用于唯一确定常数。
+
+\subsection{汉诺塔问题（Tower of Hanoi）}
+
+\textbf{问题描述：}将 $n$ 个大小不同的圆盘从起始柱 $a$ 移动到目标柱 $b$，在移动过程中可以借助辅助柱 $c$，并且必须满足以下规则：每次只能移动一个圆盘；任意时刻，大圆盘不能放在小圆盘上面。
+
+\begin{verbatim}
+void hanoi(int n, int a, int b, int c) {
+    if (n > 0) {
+        hanoi(n - 1, a, c, b);  // 将n-1个盘子从a移到c（借助b）
+        move(a, b);             // 将第n个盘子从a直接移到b
+        hanoi(n - 1, c, b, a);  // 将n-1个盘子从c移到b（借助a）
+    }
+}
+\end{verbatim}
+
+\textbf{时间复杂度分析：}设移动 $n$ 个圆盘所需的时间为 $T(n)$，则有递推关系
+$T(n)=2T(n-1)+1.$解得：$T(n)=2^n-1$.因此，汉诺塔问题的时间复杂度为$O(2^n)$
+
+\textbf{空间复杂度分析：}递归调用的最大深度为 $n$，因此递归栈所需的空间复杂度为$O(n).$
+
+\subsection{分治算法时间复杂度}
+$$
+T(n)=
+\begin{cases}
+O(1), & n=1,\\
+k\,T\!\left(\dfrac{n}{m}\right)+f(n), & n>1.
+\end{cases}
+$$
+其中：$k$子问题个数；$n/m$每个子问题的规模；$f(n)$当前层的额外计算（分割或合并代价）。
+
+\textbf{重要结论}
+\begin{enumerate}
+  \item 递归深度为：$\log_m n.$
+  \item 叶子结点（最底层子问题）总数量为：$k^{\log_m n}=n^{\log_m k}.$
+  \item 分治算法的总时间复杂度可以表示为：
+  $$
+  T(n)
+  =
+  n^{\log_m k}
+  +
+  \sum_{i=0}^{\log_m n -1}
+  k^i f\!\left(\frac{n}{m^i}\right).
+  $$
+\end{enumerate}
+
+\textbf{记忆要点：}看\textbf{子问题个数}$k$；看\textbf{规模缩小倍数}$m$；先算 $n^{\log_m k}$（叶子结点代价）；再看 $f(n)$ 在各层累加后的大小；谁占主导，谁就是最终时间复杂度。
+
+\subsection{二分搜索（Binary Search）}
+\begin{verbatim}
+int BinarySearch(Type a[], const Type &x, int l, int r)
+{
+    while (l <= r) {
+        int m = (l + r) / 2;   // 计算中点下标
+        if (x == a[m]) 
+            return m;         // 找到目标，返回位置
+        if (x < a[m]) 
+            r = m - 1;        // 目标在左半区，缩小右边界
+        else 
+            l = m + 1;        // 目标在右半区，缩小左边界
+    }
+    return -1;                // 查找失败
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+设数组长度为 $n$，每次比较后查找区间规模减半：$n \rightarrow \frac{n}{2} \rightarrow \frac{n}{4} \rightarrow \cdots \rightarrow 1.$
+因此查找次数为$\log_2 n,$
+二分搜索的时间复杂度为$O(\log n).$
+
+\textbf{空间复杂度：}该实现为迭代版本，只使用常数个辅助变量，因此空间复杂度为$O(1).$
+
+\subsection{大整数乘法（Karatsuba 算法）}
+
+\textbf{问题背景：}设 $X,Y$ 为两个 $n$ 位的大整数，若直接相乘，时间复杂度为$O(n^2).$
+
+\textbf{分治思想：}
+将两个 $n$ 位整数拆分为高位和低位（假设 $n$ 为偶数）：$X = a\cdot 2^{n/2} + b, Y = c\cdot 2^{n/2} + d.$
+
+直接展开乘积：$XY = ac\cdot 2^n + (ad+bc)\cdot 2^{n/2} + bd.$
+
+\textbf{关键改进（Karatsuba 思想）：}注意到$ad+bc = (a+b)(c+d) - ac - bd.$因此只需计算以下三个乘法：$ac$、$bd$、$(a+b)(c+d)$其余部分只需要加减运算。
+
+\textbf{递归时间复杂度：}
+
+Karatsuba 算法的递归式为：
+$$
+T(n)=
+\begin{cases}
+O(1), & n=1,\\
+3T(n/2)+O(n), & n>1.
+\end{cases}
+$$
+
+由主定理可得：$T(n)=O\!\left(n^{\log_2 3}\right)\approx O(n^{1.585}),
+$优于普通的大整数乘法 $O(n^2)$。
+
+\subsection{Strassen 矩阵乘法}
+
+\textbf{问题背景：}设 $A,B$ 为 $n\times n$ 矩阵，普通矩阵乘法的时间复杂度为：$O(n^3).$
+
+\textbf{分块表示：}
+
+将矩阵划分为四个子块
+$$
+A=
+\begin{pmatrix}
+A_{11} & A_{12}\\
+A_{21} & A_{22}
+\end{pmatrix},
+\qquad
+B=
+\begin{pmatrix}
+B_{11} & B_{12}\\
+B_{21} & B_{22}
+\end{pmatrix}.
+$$
+
+\textbf{Strassen 的 7 个中间矩阵}
+
+\[
+\begin{aligned}
+M_1 &= A_{11}(B_{12}-B_{22}),\\
+M_2 &= (A_{11}+A_{12})B_{22},\\
+M_3 &= (A_{21}+A_{22})B_{11},\\
+M_4 &= A_{22}(B_{21}-B_{11}),\\
+M_5 &= (A_{11}+A_{22})(B_{11}+B_{22}),\\
+M_6 &= (A_{12}-A_{22})(B_{21}+B_{22}),\\
+M_7 &= (A_{11}-A_{21})(B_{11}+B_{12}).
+\end{aligned}
+\]
+
+\textbf{结果矩阵的计算}
+
+\[
+\begin{aligned}
+C_{11} &= M_5 + M_4 - M_2 + M_6,\\
+C_{12} &= M_1 + M_2,\\
+C_{21} &= M_3 + M_4,\\
+C_{22} &= M_5 + M_1 - M_3 - M_7.
+\end{aligned}
+\]
+
+\textbf{时间复杂度：}Strassen 矩阵乘法的递归式为$T(n)=7T(n/2)+O(n^2).$
+由主定理可得：
+$T(n)=O\!\left(n^{\log_2 7}\right)\approx O(n^{2.81}),
+$优于普通矩阵乘法的 $O(n^3)$。
+
+\subsection{棋盘覆盖算法}
+要求：对一个 $2^k\times 2^k$ 的棋盘进行覆盖，
+其中恰好有一个特殊方格（缺口），其余方格需用 L 型骨牌覆盖。算法采用分治与递归思想，始终保持：
+\textbf{每一个递归子棋盘中恰好只有一个缺口}。
+
+\begin{verbatim}
+#define N 8
+int board[N][N];
+int tile = 1; // 骨牌编号
+
+// 参数说明：
+// tr, tc:当前子棋左上角位置
+// dr, dc:当前特殊方格坐标（绝对坐标）
+// size:当前子棋盘规模（边长）
+void chessBoard(int tr, int tc, int dr, int dc, int size) {
+    if (size == 1) return;
+    int t = tile++;
+    int s = size / 2;
+    
+    // 左上子棋盘
+    if (dr < tr + s && dc < tc + s) {
+        chessBoard(tr, tc, dr, dc, s);
+    } else {
+        board[tr + s - 1][tc + s - 1] = t;
+        chessBoard(tr, tc, tr + s - 1, tc + s - 1, s);
+    }
+    
+    // 右上子棋盘
+    if (dr < tr + s && dc >= tc + s) {
+        chessBoard(tr, tc + s, dr, dc, s);
+    } else {
+        board[tr + s - 1][tc + s] = t;
+        chessBoard(tr, tc + s, tr + s - 1, tc + s, s);
+    }
+    
+    // 左下子棋盘
+    if (dr >= tr + s && dc < tc + s) {
+        chessBoard(tr + s, tc, dr, dc, s);
+    } else {
+        board[tr + s][tc + s - 1] = t;
+        chessBoard(tr + s, tc, tr + s, tc + s - 1, s);
+    }
+    
+    // 右下子棋盘
+    if (dr >= tr + s && dc >= tc + s) {
+        chessBoard(tr + s, tc + s, dr, dc, s);
+    } else {
+        board[tr + s][tc + s] = t;
+        chessBoard(tr + s, tc + s, tr + s, tc + s, s);
+    }
+}
+\end{verbatim}
+
+\subsection{合并排序（Merge Sort）}
+合并排序是一种典型的分治算法。其基本思想是：\textbf{将待排序序列不断划分为两个子序列，
+分别排序后，再将两个有序子序列合并为一个有序序列}。
+
+\textbf{1.递归排序函数}
+\begin{verbatim}
+void mergeSort(Type a[], int left, int right)
+{
+    if (left < right) {
+        int i = (left + right) / 2;
+        mergeSort(a, left, i);
+        mergeSort(a, i + 1, right);
+        merge(a, b, left, i, right);
+        copy(a, b, left, right);
+    }
+}
+\end{verbatim}
+
+\textbf{2.合并函数}
+
+\begin{verbatim}
+void merge(Type a[], Type d[], int l, int m, int r)
+{
+    int i = l, j = m + 1, k = l;
+    while (i <= m && j <= r) {
+        if (a[i] <= a[j])
+            d[k++] = a[i++];
+        else
+            d[k++] = a[j++];
+    }
+
+    if (i > m)
+        for (int q = j; q <= r; q++)
+            d[k++] = a[q];
+    else
+        for (int q = i; q <= m; q++)
+            d[k++] = a[q];
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}合并排序的递归关系为$T(n) = 2T(n/2) + O(n).$由主定理可得$T(n) = O(n \log n).$
+
+\textbf{空间复杂度：}由于合并过程需要额外的辅助数组，合并排序的空间复杂度为$O(n).$
+
+\subsection{快速排序（Quick Sort）}
+
+快速排序是一种典型的分治排序算法，其基本思想是：
+\textbf{选取一个基准元素，将序列划分为左右两部分，
+使得左边元素不大于基准，右边元素不小于基准，
+然后分别对左右两部分递归排序。}
+
+\textbf{1.快速排序的递归框架}
+
+\begin{verbatim}
+void QuickSort(Type a[], int p, int r)
+{
+    if (p < r) {
+        int q = Partition(a, p, r);
+        QuickSort(a, p, q - 1);
+        QuickSort(a, q + 1, r);
+    }
+}
+\end{verbatim}
+
+\textbf{2.划分函数（Partition）}
+
+\begin{verbatim}
+int Partition(Type a[], int p, int r)
+{
+    int i = p, j = r + 1;
+    Type x = a[p];
+    while (true) {
+        while (a[++i] < x);
+        while (a[--j] > x);
+        if (i >= j) break;
+        Swap(a[i], a[j]);
+    }
+    a[p] = a[j];
+    a[j] = x;
+    return j;
+}
+\end{verbatim}
+
+\textbf{3.随机化划分}
+
+\begin{verbatim}
+int RandomizedPartition(Type a[], int p, int r)
+{
+    int i = Random(p, r);
+    Swap(a[i], a[p]);
+    return Partition(a, p, r);
+}
+\end{verbatim}
+
+\textbf{时间复杂度：}
+在平均情况下，快速排序每次划分都能较均匀地分割数组，
+递归深度为 $O(\log n)$，
+每一层划分操作的代价为 $O(n)$，
+因此平均时间复杂度为：$O(n \log n).$
+在最坏情况下（例如数组已经有序且基准选择不当），每次只能划分出一个规模为 $n-1$ 的子问题，时间复杂度退化为：$O(n^2).$
+
+\textbf{空间复杂度：}快速排序主要消耗递归栈空间，平均情况下递归深度为 $O(\log n)$，因此空间复杂度为：$O(\log n).$
+
+\subsection{随机选择算法（Randomized Select）}
+
+随机选择算法用于在数组中查找第 $k$ 小元素，其思想来源于快速排序中的划分操作。
+
+\begin{verbatim}
+RSelect(a, p, r, k)
+{
+    if (p == r)
+        return a[p];
+    mid = RandomizedPartition(a, p, r);
+    if (mid == k)
+        return a[mid];
+    else if (mid > k)
+        return RSelect(a, p, mid - 1, k);
+    else
+        return RSelect(a, mid + 1, r, k);
+}
+\end{verbatim}
+
+由于每一轮递归只进入一个子区间，该算法的平均时间复杂度为：$O(n).$
+
+\subsection{寻找第 $k$ 小元素（Randomized-Select 算法）}
+
+\textbf{随机划分函数 RandomizedPartition}
+
+\begin{verbatim}
+template<class Type>
+int RandomizedPartition(Type a[], int p, int r) {
+    int i = Random(p, r);
+    Swap(a[i], a[p]);
+    return Partition(a, p, r);
+}
+\end{verbatim}
+
+\textbf{划分函数 Partition}
+
+\begin{verbatim}
+template<class Type>
+int Partition(Type a[], int p, int r)
+{
+    int i = p, j = r + 1;
+    Type x = a[p];
+
+    while (true) {
+        while (a[++i] < x && i < r);
+        while (a[--j] > x);
+        if (i >= j) break;
+        Swap(a[i], a[j]);
+    }
+
+    a[p] = a[j];
+    a[j] = x;
+    return j;
+}
+\end{verbatim}
+
+\textbf{随机化选择函数 RandomizedSelect}
+
+\begin{verbatim}
+template<class Type>
+Type RandomizedSelect(Type a[], int p, int r, int k) {
+    if (p == r) return a[p];
+    int i = RandomizedPartition(a, p, r);
+    int j = i - p + 1;
+    if (k <= j)
+        return RandomizedSelect(a, p, i, k);
+    else
+        return RandomizedSelect(a, i + 1, r, k - j);
+}
+\end{verbatim}
+
+\textbf{算法复杂度分析：}在平均情况下，每一次划分都能较均匀地缩小问题规模，因此随机化选择算法的期望时间复杂度为：$O(n)$.相比完全排序所需的 $O(n \log n)$ 时间复杂度，该算法在仅需寻找第 $k$ 小元素时具有更高的效率。
+
+\subsection{循环赛问题}
+
+循环赛（Round-Robin Tournament）问题的目标是：给定 $n$ 个选手（或队伍），安排比赛日程，使得每一对选手恰好比赛一次，并且每天（每一轮）每位选手只进行一场比赛。  
+在经典模型中，若 $n=2^k$，可以构造一个 $n \times n$ 的表格 $a$ 来描述日程安排，其中 $a[i][j]$ 表示第 $i$ 个选手在第 $j$ 轮的对手编号（不同教材可能从第 1 轮到第 $n-1$ 轮，这里代码按表格整体递推生成）。
+
+\begin{verbatim}
+void Table(int k, int **a)
+{
+    int n = 1;
+    for (int i = 1; i <= k; i++)
+        n *= 2;                 // 计算 n = 2^k
+
+    for (int i = 1; i <= n; i++)
+        a[1][i] = i;            // 初始化第一行（作为递推基底）
+
+    int m = 1;                  // 当前已构造子表规模为 m
+    for (int s = 1; s <= k; s++) {
+        n /= 2;                 // 每次递推对应划分成若干块
+        for (int t = 1; t <= n; t++) {
+            for (int i = m + 1; i <= 2 * m; i++) {
+                for (int j = m + 1; j <= 2 * m; j++) {
+                    a[i][j + (t - 1) * m * 2 - m] =
+                        a[i - m][j + (t - 1) * m * 2 - 2 * m];
+
+                    a[i][j + (t - 1) * m * 2 - m] =
+                        a[i - m][j + (t - 1) * m * 2 - 2 * m];
+                }
+            }
+        }
+        m *= 2;                 // 子表规模翻倍：m -> 2m
+    }
+}
+\end{verbatim}
+\textbf{复杂度分析：} 该算法需要填充 $n \times n$ 的表格单元，每个单元最多被常数次赋值，因此时间复杂度为：$O(n^2)$；空间上需要保存整个赛程表，同样为：$O(n^2)$.
