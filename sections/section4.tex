@@ -181,7 +181,6 @@ void Dijkstra(int n, int v, Type c[][MAXN], Type dist[], int prev[])
             }
         }
         S[u] = true;         // 将 u 加入 S
-
         // 用 u 松弛其邻接点
         for (int j = 1; j <= n; j++) {
             if (!S[j] && c[u][j] < maxint) {
@@ -297,14 +296,13 @@ Kruskal 算法适合\textbf{稀疏图}；
 每个作业可以在\textbf{任意一台机器}上加工，但\textbf{同一时刻一台机器只能加工一个作业}，
 且\textbf{作业一旦开始加工不能中断}。目标是：
 \textbf{合理安排作业顺序与分配方案，使所有作业完成的总时间（完工时间，makespan）最小。}
-
 该问题是一个经典的 \textbf{NP-完全问题}，
 目前不存在多项式时间的精确算法，通常采用贪心策略设计近似算法。
 
 \textbf{贪心策略（最长作业优先，LPT）：}
 将所有作业按处理时间 $p_i$ \textbf{从大到小排序}；
 依次将当前作业分配给\textbf{当前负载最小（最早空闲）的机器}。
-该策略的直观思想是：
+该策略的直观思想是
 \textbf{优先处理耗时最长的作业，避免其被推迟到后期造成整体完成时间过大。}
 
 \textbf{算法步骤说明：}
@@ -319,9 +317,4 @@ Kruskal 算法适合\textbf{稀疏图}；
     \end{enumerate}
 \end{itemize}
 
-\textbf{时间复杂度：}
-\begin{itemize}
-  \item 作业排序需要 $O(n\log n)$；
-  \item 作业分配过程可在 $O(n\log m)$（使用优先队列）或 $O(nm)$ 时间内完成；
-\end{itemize}
-因此整体时间复杂度为$O(n\log n).$
+\textbf{时间复杂度：}作业排序需要 $O(n\log n)$；作业分配过程可在 $O(n\log m)$（使用优先队列）或 $O(nm)$ 时间内完成；因此整体时间复杂度为$O(n\log n).$
