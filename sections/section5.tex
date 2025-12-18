@@ -10,7 +10,7 @@
 搜索过程中，逐层构造解向量，当到达叶结点时输出一个解；
 若当前部分解违反约束或不可能得到更优解，则进行剪枝。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void backtrack(int t)
 {
     if (t > n) output(x);
@@ -21,7 +21,7 @@ void backtrack(int t)
                 backtrack(t + 1);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 回溯法在最坏情况下需要遍历整个解空间树。
@@ -38,7 +38,7 @@ void backtrack(int t)
 迭代回溯通过显式维护层号 $t$，
 模拟递归调用与回退过程。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void iterativeBacktrack()
 {
     int t = 1;
@@ -54,7 +54,7 @@ void iterativeBacktrack()
         else t--;
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 迭代回溯与递归回溯本质上遍历的是\textbf{同一棵解空间树}，
@@ -69,7 +69,7 @@ void iterativeBacktrack()
 例如 0-1 背包、装载问题、最大团问题等。
 解空间是一棵\textbf{二叉树}。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void backtrack(int t)
 {
     if (t > n) output(x);
@@ -79,7 +79,7 @@ void backtrack(int t)
             if (legal(t)) backtrack(t + 1);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 子集树共有 $2^n$ 个叶结点，
@@ -91,7 +91,7 @@ $O(2^n).$
 例如旅行售货员问题、批处理作业调度问题等。
 解空间是一棵\textbf{多叉树}。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void backtrack(int t)
 {
     if (t > n) output(x);
@@ -102,7 +102,7 @@ void backtrack(int t)
             swap(x[t], x[i]);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 排列树共有 $n!$ 个叶结点，
@@ -127,31 +127,27 @@ $\sum_{i=1}^n w_i \le c_1 + c_2.$
 这等价于一个特殊的 \textbf{0-1 背包问题}，
 可采用 \textbf{回溯法} 求解。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void backtrack(int i)
 {
     if (i > n) {            // 到达叶结点
         bestw = cw;         // 更新最优解
         return;
     }
-
     r -= w[i];              // 更新剩余重量
-
     if (cw + w[i] <= c) {   // 搜索左子树（装第 i 个）
         x[i] = 1;
         cw += w[i];
         backtrack(i + 1);
         cw -= w[i];
     }
-
     if (cw + r > bestw) {   // 搜索右子树（不装第 i 个）
         x[i] = 0;
         backtrack(i + 1);
     }
-
     r += w[i];              // 回退到上一层
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 装载问题的解空间为一棵子集树，
@@ -179,7 +175,7 @@ void backtrack(int i)
 确定一种作业加工顺序，
 使得所有作业在机器 $2$ 上完成的总时间最小。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Flowshop::Backtrack(int i)
 {
     if (i > n) {
@@ -198,12 +194,11 @@ void Flowshop::Backtrack(int i)
                 Backtrack(i + 1);
                 swap(x[i], x[j]);
             }
-
             f1 -= M[x[j]][1];
             f -= f2[i];
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 批处理作业调度问题的解空间是一棵排列树，
@@ -225,33 +220,28 @@ void Flowshop::Backtrack(int i)
 符号三角形问题要求：  
 \textbf{对于给定的 $n$，计算有多少种不同的符号三角形，使得其中 “$+$” 和 “$-$” 的个数相同。}
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Triangle::Backtrack(int t)
 {
     if ((count > half) || (t*(t+1)/2 - count > half))
         return;
-
     if (t > n)
         sum++;
     else
         for (int i = 0; i < 2; i++) {   // {0,1} -> {+, -}
             p[1][t] = i;
             count += i;
-
             for (int j = 2; j <= t; j++) {
                 p[j][t-j+1] = p[j-1][t-j+1] + p[j-1][t-j+2];
                 count += p[j][t-j+1];
             }
-
             Backtrack(t + 1);
-
             for (int j = 2; j <= t; j++)
                 count -= p[j][t-j+1];
-
             count -= i;
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}该问题的解空间为一棵子集树，规模为 $2^n$；
 每一次可行性判断与符号生成的代价为 $O(n)$；
@@ -270,7 +260,7 @@ void Triangle::Backtrack(int t)
 $n$ 后问题要求计算在棋盘上放置 $n$ 个皇后的所有可行方案数。
 
 \textbf{可行性检测函数：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 bool Queen::Place(int k)
 {
     for (int j = 1; j < k; j++)
@@ -278,11 +268,11 @@ bool Queen::Place(int k)
             return false;
     return true;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{回溯算法代码：}
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Queen::Backtrack(int t)
 {
     if (t > n)
@@ -294,7 +284,7 @@ void Queen::Backtrack(int t)
                 Backtrack(t + 1);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 $n$ 后问题的解空间是一棵排列树，
@@ -319,7 +309,7 @@ $O(n!).$
 使装入物品的总价值最大。
 
 \textbf{回溯算法代码：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 template<class Typew, class Typep>
 void Knap<Typew, Typep>::Backtrack(int i)
 {
@@ -327,7 +317,6 @@ void Knap<Typew, Typep>::Backtrack(int i)
         bestp = cp;
         return;
     }
-
     if (cw + w[i] <= c) {
         cw += w[i];
         cp += p[i];
@@ -335,32 +324,28 @@ void Knap<Typew, Typep>::Backtrack(int i)
         cw -= w[i];
         cp -= p[i];
     }
-
     if (Bound(i + 1) > bestp)
         Backtrack(i + 1);
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{上界函数代码：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 template<class Typew, class Typep>
 Typep Knap<Typew, Typep>::Bound(int i)
 {
     Typew cleft = c - cw;
     Typep b = cp;
-
     while (i <= n && w[i] <= cleft) {
         cleft -= w[i];
         b += p[i];
         i++;
     }
-
     if (i <= n)
         b += p[i] / w[i] * cleft;
-
     return b;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 0-1 背包问题的解空间为一棵子集树，
@@ -381,7 +366,7 @@ Typep Knap<Typew, Typep>::Bound(int i)
 图 $G$ 中顶点数最多的团称为 \textbf{最大团}。
 最大团问题要求找出图 $G$ 的一个最大团。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Clique::Backtrack(int i)
 {
     if (i > n) {
@@ -389,27 +374,24 @@ void Clique::Backtrack(int i)
             bestx[j] = x[j];
         return;
     }
-
     bool OK = true;
     for (int j = 1; j < i; j++)
         if (x[j] && !a[i][j]) {
             OK = false;
             break;
         }
-
     if (OK) {
         x[i] = 1;
         cn++;
         Backtrack(i + 1);
         cn--;
     }
-
     if (cn + n - i > bestn) {
         x[i] = 0;
         Backtrack(i + 1);
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 最大团问题的解空间规模为 $2^n$。
@@ -427,7 +409,7 @@ $O(2^n).$
 判断图是否存在一种合法的 $m$ 着色方案。
 
 \textbf{回溯算法代码：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Color::Backtrack(int t)
 {
     if (t > n)
@@ -439,10 +421,10 @@ void Color::Backtrack(int t)
                 Backtrack(t + 1);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{可行性检测函数：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 bool Color::OK(int k)
 {
     for (int j = 1; j < k; j++)
@@ -450,7 +432,7 @@ bool Color::OK(int k)
             return false;
     return true;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 图的 m 着色问题的解空间为 $m^n$。
@@ -468,7 +450,7 @@ bool Color::OK(int k)
 并最终返回出发城市，
 要求使得总旅行距离最短。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 template<class Type>
 void Traveling<Type>::Backtrack(int i)
 {
@@ -493,7 +475,7 @@ void Traveling<Type>::Backtrack(int i)
             }
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 旅行售货员问题的解空间规模为 $(n-1)!$。
@@ -514,7 +496,7 @@ void Traveling<Type>::Backtrack(int i)
 使得最左端到最右端的距离最小。
 
 \textbf{回溯算法代码：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Circle::Backtrack(int t)
 {
     if (t > n)
@@ -527,10 +509,10 @@ void Circle::Backtrack(int t)
             swap(r[t], r[j]);
         }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{圆心计算函数：}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 float Circle::Center(int t)
 {
     float temp = 0;
@@ -540,7 +522,6 @@ float Circle::Center(int t)
             temp = value;
     }
     x[t] = temp;
-
     float low = 0, high = 0;
     for (int i = 1; i <= t; i++) {
         if (x[i] - r[i] < low)
@@ -550,10 +531,9 @@ float Circle::Center(int t)
     }
     if (high - low < best)
         best = high - low;
-
     return x[t];
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 圆排列问题的解空间为一棵排列树，
@@ -571,7 +551,7 @@ $O(n \cdot n!).$
 使得在最多贴 $m$ 张邮票的条件下，
 从 $1$ 开始可以连续表示的邮资区间尽可能大。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Stamp::Backtrack(int t)
 {
     if (t > n) {
@@ -582,7 +562,6 @@ void Stamp::Backtrack(int t)
         }
         return;
     }
-
     int *z = new int[maxx + 1];
     for (int i = 1; i <= maxx; i++)
         z[i] = y[i];
@@ -591,16 +570,14 @@ void Stamp::Backtrack(int t)
         x[t] = i;
         for (int k = 1; k <= maxx; k++)
             y[k] = z[k];
-
         Update(t);
         Backtrack(t + 1);
     }
-
     for (int k = 1; k <= maxx; k++)
         y[k] = z[k];
     delete[] z;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 连续邮资问题的解空间规模随 $n$ 和 $m$ 急剧增长，

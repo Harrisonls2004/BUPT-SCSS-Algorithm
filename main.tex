@@ -1,37 +1,60 @@
 \documentclass[UTF8]{ctexart}
+
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
 \geometry{a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\usepackage{xcolor}
+\usepackage{listings}
+
+% （可选）把目录标题固定为“目录”
+\renewcommand{\contentsname}{目录}
+
+\lstdefinestyle{codeStyle}{
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  rulecolor=\color{gray!40},
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange!70!black}
+}
 
 \begin{document}
 
 % 封面页
 \begin{titlepage}
   \centering
-  \vspace*{4cm} % 调整这个值可以控制标题垂直位置
-  
+  \vspace*{4cm}
+
   {\Huge \textbf{算法设计与分析}}\\[0.5cm]
   {\Huge \textbf{代码背诵}}\\[2cm]
-  
+
   {\LARGE \textbf{李昊伦}}\\[1.5cm]
-  
+
   {\Large 2025.12}\\[3cm]
-  
+
   \vfill
   {\large 整理归纳 \quad 系统复习 \quad 查漏补缺}
-  
 \end{titlepage}
 
-% 正文
+% 正文（确保 section 文件里用 \section / \subsection 才会进目录）
 \input{sections/section1}
-\newpage
+\clearpage
 \input{sections/section2}
-\newpage
+\clearpage
 \input{sections/section3}
-\newpage
+\clearpage
 \input{sections/section4}
-\newpage
+\clearpage
 \input{sections/section5}
-\newpage
+\clearpage
 
 \end{document}

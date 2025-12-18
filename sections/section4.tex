@@ -14,12 +14,11 @@
 
 \textbf{贪心策略：}按活动的\textbf{结束时间从小到大排序}；每次选择\textbf{当前结束时间最早且与已选活动不冲突的活动}。该策略可以保证给后续活动留下尽可能多的时间，因此是全局最优的。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void GreedySelector(int n, int s[], int f[], bool A[])
 {
     A[1] = true;          // 选择第一个活动
     int j = 1;
-
     for (int i = 2; i <= n; i++) {
         if (s[i] >= f[j]) {
             A[i] = true; // 选择活动 i
@@ -29,7 +28,7 @@ void GreedySelector(int n, int s[], int f[], bool A[])
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}
 若活动已排序，则算法时间复杂度为$O(n).$若需要先排序，则总体复杂度为$O(n\log n).$
@@ -46,26 +45,22 @@ void GreedySelector(int n, int s[], int f[], bool A[])
 若剩余容量不足以装入整个物品，则装入该物品的一部分并结束。
 该策略能保证每一步都优先获得最大“单位收益”，因此可以得到全局最优解。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Knapsack(int n, float M, float v[], float w[], float x[])
 {
     Sort(n, v, w);    // 按 v[i]/w[i] 从大到小排序
-
     for (int i = 1; i <= n; i++)
     x[i] = 0;
-
     float c = M;
     int i;
-
     for (i = 1; i <= n; i++) {
         if (w[i] > c) break;   // 剩余容量不足，无法装入整个物品 i
         x[i] = 1;              // 装入整个物品 i
         c -= w[i];
     }
-
     if (i <= n) x[i] = c / w[i];   // 装入物品 i 的一部分
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}
 排序耗时 $O(n\log n)$，装包过程为 $O(n)$，
@@ -85,22 +80,19 @@ $O(n\log n).$
 当剩余载重不足以装下下一个货箱时，算法结束。
 该策略保证在相同载重条件下，能够装入尽可能多的货箱，因此是最优的。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Loading(int x[], int w[], int C, int n)
 {
     int *t = new int[n+1];     // t[i] 存放排序后的货箱下标
-
     Sort(w, t, n);             // 按重量 w 从小到大排序，结果存入 t
-
     for (int i = 1; i <= n; i++)
         x[i] = 0;              // 初始化：不装任何货箱
-
     for (int i = 1; i <= n && w[t[i]] <= C; i++) {
         x[t[i]] = 1;           // 装入编号为 t[i] 的货箱
         C -= w[t[i]];          // 更新剩余载重
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}
 排序过程需要 $O(n\log n)$ 时间，
@@ -133,26 +125,21 @@ $w_i$ 为字符 $i$ 的频率（权值），$l_i$ 为其编码长度。
 该策略保证每一步的局部最优选择（合并最小权值结点）
 最终得到全局最优的哈夫曼树。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Huffman(int w[], int n)
 {
     MinHeap<HuffmanNode> Q;
-
     Initialize(Q, w, n);   // 将 n 个权值初始化到最小堆中
-
     HuffmanNode x, y, z;
-
     for (int i = 1; i < n; i++) {
         Q.deleteMin(x);    // 取出权值最小的结点 x
         Q.deleteMin(y);    // 取出权值次小的结点 y
-
         z.MakeTree(x, y);  // 合并 x 和 y 为一棵新树
         z.weight = x.weight + y.weight;
-
         Q.insert(z);       // 将新结点插回最小堆
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}
 最小堆初始化需要 $O(n)$ 时间，
@@ -171,25 +158,21 @@ $O(n\log n).$
 要求计算从源点 $v$ 到图中其余各顶点的\textbf{最短路径长度}，
 并可同时记录对应的最短路径。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Dijkstra(int n, int v, Type c[][MAXN], Type dist[], int prev[])
 {
     bool S[MAXN];
-
     for (int i = 1; i <= n; i++) {
         dist[i] = c[v][i];   // 初始化距离
         S[i] = false;        // 初始时所有顶点均未加入 S
         if (dist[i] < maxint) prev[i] = v;
         else prev[i] = -1;
     }
-
     dist[v] = 0;
     S[v] = true;             // 源点加入 S
-
     for (int i = 1; i < n; i++) {
         Type temp = maxint;
         int u = v;
-
         // 在 V-S 中寻找 dist 最小的顶点 u
         for (int j = 1; j <= n; j++) {
             if (!S[j] && dist[j] < temp) {
@@ -197,7 +180,6 @@ void Dijkstra(int n, int v, Type c[][MAXN], Type dist[], int prev[])
                 temp = dist[j];
             }
         }
-
         S[u] = true;         // 将 u 加入 S
 
         // 用 u 松弛其邻接点
@@ -212,7 +194,7 @@ void Dijkstra(int n, int v, Type c[][MAXN], Type dist[], int prev[])
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}
 在该实现中每一轮需在 $O(n)$ 时间内寻找最小的 $dist$；共进行 $n-1$ 轮。
@@ -234,13 +216,12 @@ Prim 算法从某个起始顶点出发，
 在每一步中，选择一条\textbf{连接当前生成树与外部顶点的最小权值边}，
 将该边及其对应的顶点加入生成树。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Prim(int n, Type c[][MAXN])
 {
     bool S[MAXN];
     Type lowcost[MAXN];
     int closest[MAXN];
-
     // 初始化：从顶点 1 开始
     for (int i = 1; i <= n; i++) {
         S[i] = false;
@@ -248,11 +229,9 @@ void Prim(int n, Type c[][MAXN])
         closest[i] = 1;
     }
     S[1] = true;
-
     for (int i = 1; i < n; i++) {
         Type min = maxint;
         int j = 1;
-
         // 选择距离生成树最近的顶点 j
         for (int k = 2; k <= n; k++) {
             if (!S[k] && lowcost[k] < min) {
@@ -260,9 +239,7 @@ void Prim(int n, Type c[][MAXN])
                 j = k;
             }
         }
-
         S[j] = true;   // 将顶点 j 加入生成树
-
         // 更新其余顶点到生成树的最小距离
         for (int k = 2; k <= n; k++) {
             if (!S[k] && c[j][k] < lowcost[k]) {
@@ -272,7 +249,7 @@ void Prim(int n, Type c[][MAXN])
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}该实现中每次选择最小边需 $O(n)$，共进行 $n-1$ 次，因此时间复杂度为$O(n^2)$。
 
@@ -283,30 +260,26 @@ Kruskal 算法从\textbf{边的角度}构造最小生成树：将所有边按权
 依次选择当前权值最小且\textbf{不会形成回路}的边；
 直到选取 $|V|-1$ 条边为止。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Kruskal(int n, int m, Edge edges[])
 {
     MinHeap<Edge> H;
     UnionFind U(n);
-
     for (int i = 1; i <= m; i++)
         H.insert(edges[i]);   // 将所有边加入最小堆
-
     int k = 0;   // 已选边数
     while (k < n-1 && !H.empty()) {
         Edge x;
         H.deleteMin(x);       // 取出权值最小的边
-
         int a = U.Find(x.u);
         int b = U.Find(x.v);
-
         if (a != b) {         // 不形成回路
             k++;
             U.Union(a, b);    // 合并两个连通分量
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{时间复杂度：}边排序（或最小堆）需要 $O(m\log m)$；并查集操作近似为 $O(1)$；
 因此总体时间复杂度为$O(m\log m)$。

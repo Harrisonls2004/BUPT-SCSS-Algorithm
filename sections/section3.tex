@@ -19,7 +19,7 @@ m[i,j] =
 $$
 
 \subsubsection{常规方法}
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void MatrixChain(int *p, int n, int **m, int **s) 
 // m[i][j]：最少乘法次数
 // s[i][j]：A_i...A_j 的最优断开位置
@@ -30,7 +30,6 @@ void MatrixChain(int* p, int n, int** m, int** s) {
             int j = i + r - 1;
             m[i][j] = m[i+1][j] + p[i-1]*p[i]*p[j];
             s[i][j] = i;
-
             for(int k = i + 1; k < j; k++) {
                 int t = m[i][k] + m[k+1][j] + p[i-1]*p[k]*p[j];
                 if(t < m[i][j]) {
@@ -41,13 +40,13 @@ void MatrixChain(int* p, int n, int** m, int** s) {
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{算法复杂度分析：}MatrixChain的主要计算量取决于算法中对$i$，$j$和$k$的3重循环。循环体内的计算量为$O(1)$，而3重循环的总次数为$O(n^{3})$。因此算法的计算时间上界为$O(n^{3})$。算法所占用的空间显然为$O(n^{2})$。
 
 \subsubsection{递归方法}
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 int LookupChain(int i, int j)
 {
     if (m[i][j] > 0) return m[i][j];      // 已算过：直接返回（记忆化）
@@ -64,7 +63,7 @@ int LookupChain(int i, int j)
     m[i][j] = u;                          // 记忆化保存结果
     return u;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{递归复杂度：}
 子问题总数为 $\frac{n(n+1)}{2}=O(n^2).$
@@ -87,7 +86,7 @@ c[i-1][j-1]+1, & i,j>0;\ x_i = y_j \\[6pt]
 \end{cases}
 $$
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void LCSLength(int m, int n, char *x, char *y, int **c, int **b)
 {
     int i, j;
@@ -110,9 +109,6 @@ void LCSLength(int m, int n, char *x, char *y, int **c, int **b)
         }
     }
 }
-\end{verbatim}
-
-\begin{verbatim}
 void LCS(int i, int j, char *x, int **b)
 {
     if (i == 0 || j == 0) return;     // 回溯到边界，结束
@@ -125,7 +121,7 @@ void LCS(int i, int j, char *x, int **b)
         LCS(i, j-1, x, b);
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度：}
 表格大小为 $m\times n$，每个格子 $O(1)$ 计算，
@@ -152,7 +148,7 @@ t[i][j]=
 \end{cases}
 $$
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void MinWeightTriangulation(int n, Type **t, int **s)
 {
     for (int i = 1; i <= n; i++) t[i][i] = 0;
@@ -173,7 +169,7 @@ void MinWeightTriangulation(int n, Type **t, int **s)
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 状态数为 $O(n^2)$（所有 $1\le i\le j\le n$），
@@ -222,7 +218,7 @@ $
 m[i,1,0] = v[i], \quad m[i,1,1] = v[i]
 $
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void PolyMax(int n)
 {
     int minf, maxf;
@@ -230,16 +226,13 @@ void PolyMax(int n)
         for (int i = 1; i <= n; i++) {      // 子链起点 i（环状）
             for (int s = 1; s < j; s++) {   // 断开位置 s（划分成两段）
                 MinMax(n, i, s, j, minf, maxf);
-
                 if (m[i][j][0] > minf)
                     m[i][j][0] = minf;      // 更新最小值
-
                 if (m[i][j][1] < maxf)
                     m[i][j][1] = maxf;      // 更新最大值
             }
         }
     }
-
     int temp = m[1][n][1];
     for (int i = 2; i <= n; i++) {          // 枚举起点，取全局最大
         if (temp < m[i][n][1])
@@ -247,7 +240,7 @@ void PolyMax(int n)
     }
     return temp;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 三重循环规模约为：
@@ -274,37 +267,33 @@ $3+8=11\ \text{位}.$
 目标是：\textbf{选择一种分段方式，使总存储位数最小}，且每段长度不超过 256。
 
 $$
-S[i]=\min_{1\le k\le \min(i,256)}
-\Bigl\{S[i-k]+k\cdot b_{\max}(i-k+1,i)\Bigr\}+11.
+S[i] = \min_{1 \le j \le \min(i,256)}
+\left\{ S[i-j] + j \cdot \max_{i-j+1 \le t \le i} b[t] \right\} + 1,
+\qquad
+b[t] = \text{length}(p_t).
 $$
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Compress(int n, int p[], int S[], int L[], int b[])
 {
     int Lmax = 256, header = 1;
-
     S[0] = 0;
-
     for (int i = 1; i <= n; i++) {           // 依次计算 S[1..n]
         b[i] = length(p[i]);                 // 第 i 个元素所需位数
-
         int bmax = b[i];
         S[i] = S[i-1] + bmax;                // 先假设最后一段只含 p[i]
         L[i] = i;
-
         for (int j = 2; j <= i && j <= Lmax; j++) {   // j 表示最后一段长度
             if (bmax < b[i-j+1]) bmax = b[i-j+1];      // 更新该段最大位宽
-
             if (S[i] > S[i-j] + j * bmax) {            // 选择更优的分段
                 S[i] = S[i-j] + j * bmax;
                 L[i] = j;                               // 记录最后一段长度
             }
         }
-
         S[i] += header;                                 // 加上该段头部开销
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 对每个 $i$，内层最多枚举 $j=1.. \min(i,Lmax)$，
@@ -344,7 +333,7 @@ $i<t\ \text{但}\ \pi(i)>\pi(t),$
 \end{cases}
 \]
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void MNS(int C[], int n, int **size)
 {
     // 初始化 i=1 的情况
@@ -360,11 +349,11 @@ void MNS(int C[], int n, int **size)
     // 最终结果
     size[n][n] = max(size[n-1][n],size[n-1][C[n]-1] + 1);
 }
-\end{verbatim}
+\end{lstlisting}
 
-textbf{最优解构造（回溯）：}
+\textbf{最优解构造（回溯）：}
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void Traceback(int C[], int **size, int n, int Net[], int &m)
 {
     int j = n;
@@ -378,7 +367,7 @@ void Traceback(int C[], int **size, int n, int Net[], int &m)
     if (j >= C[1])
         Net[m++] = 1;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 状态表规模为 $O(n^2)$，
@@ -483,37 +472,32 @@ m(i+1,j), & 0\le j < w_i.
 
 \noindent\textbf{算法代码：}
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 template<class Type>
 void knapsack(Type v[], int w[], int c, int n, Type **m)
 {
     int jMax = min(w[n] - 1, c);
-
     // 初始化第 n 个物品这一行：m[n][j]
     for (int j = 0; j <= jMax; j++)
         m[n][j] = 0;
     for (int j = w[n]; j <= c; j++)
         m[n][j] = v[n];
-
     // 从 i=n-1 递推到 2（最后单独处理 i=1）
     for (int i = n - 1; i > 1; i--) {
         jMax = min(w[i] - 1, c);
-
         // j < w[i] 时装不下物品 i，只能继承 m[i+1][j]
         for (int j = 0; j <= jMax; j++)
             m[i][j] = m[i+1][j];
-
         // j >= w[i] 时，取“选/不选”两种情况的最大值
         for (int j = w[i]; j <= c; j++)
             m[i][j] = max(m[i+1][j], m[i+1][j - w[i]] + v[i]);
     }
-
     // 单独处理 i=1（只计算 m[1][c]）
     m[1][c] = m[2][c];
     if (c >= w[1])
         m[1][c] = max(m[1][c], m[2][c - w[1]] + v[1]);
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 需要填充大部分 $m[i][j]$（约 $n\times c$ 个状态），
@@ -532,7 +516,7 @@ $O(nc).$
 失败查找落在区间之间的概率（或权值）为 $b_i$（通常 $b_0,\dots,b_n$）。
 要求构造一棵二叉搜索树，使得\textbf{平均查找代价}（期望比较次数）最小。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 void OptimalBinarySearchTree(int a[], int b[], int n, int **m, int **s, int **w)
 {
     // 初始化空区间：m[i+1][i] = 0，并给 w 的初值
@@ -540,19 +524,15 @@ void OptimalBinarySearchTree(int a[], int b[], int n, int **m, int **s, int **w)
         w[i+1][i] = a[i];   // 以该课程版本的定义为准
         m[i+1][i] = 0;
     }
-
     // r 表示区间长度：j = i + r
     for (int r = 0; r < n; r++) {
         for (int i = 1; i <= n - r; i++) {
             int j = i + r;
-
             // 计算 w[i][j]
             w[i][j] = w[i][j-1] + a[j] + b[j];
-
             // 先令 k=i 作为初值
             m[i][j] = m[i+1][j];
             s[i][j] = i;
-
             // 枚举 k=i+1..j，寻找最优根
             for (int k = i+1; k <= j; k++) {
                 int t = m[i][k-1] + m[k+1][j];
@@ -561,13 +541,12 @@ void OptimalBinarySearchTree(int a[], int b[], int n, int **m, int **s, int **w)
                     s[i][j] = k;
                 }
             }
-
             // 最后统一加上 w[i][j]
             m[i][j] += w[i][j];
         }
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度分析：}
 共有 $O(n^2)$ 个区间状态 $(i,j)$，
@@ -587,21 +566,19 @@ $$b[j]=\max\{b[j-1]+a[j],\ a[j]\},\qquad 1\le j\le n.$$
 
 最终答案为$\max_{1\le j\le n} b[j].$
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 int MaxSum(int n, int *a)
 {
     int sum = 0;   // 记录目前全局最大
     int b = 0;     // 记录以当前位置结尾的最大子段和
-
     for (int i = 1; i <= n; i++) {
         if (b > 0) b = b + a[i];
         else       b = a[i];
-
         if (sum < b) sum = b;
     }
     return sum;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度：}
 时间复杂度 $O(n),$ 空间复杂度 $O(1).$
@@ -618,27 +595,24 @@ int MaxSum(int n, int *a)
 $b[k]=\sum_{t=i}^{j} A[t][k].$则此时“最佳子矩阵”在列方向上等价于求数组 $b[1..n]$ 的最大子段和。
 对所有 $(i,j)$ 枚举即可求最优。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 int MaxSum2(int m, int n, int **a)
 {
     int sum = 0;
     int *b = new int[n+1];
-
     for (int i = 1; i <= m; i++) {
         for (int k = 1; k <= n; k++)
             b[k] = 0;
-
         for (int j = i; j <= m; j++) {
             for (int k = 1; k <= n; k++)
                 b[k] += a[j][k];
-
             int max = MaxSum(n, b);
             if (max > sum) sum = max;
         }
     }
     return sum;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度：}
 共有 $O(m^2)$ 组行边界 $(i,j)$，
@@ -653,20 +627,17 @@ $O(m^2 n),$
 给定序列 $a[1..n]$，要求选取\textbf{恰好 $m$ 段互不重叠的连续子段}，
 使得这些子段元素和的总和最大。
 
-\begin{verbatim}
+\begin{lstlisting}[language=C,style=codeStyle]
 int MaxSum(int m, int n, int *a)
 {
     if (n < m || m < 1) return 0;
-
     int *b = new int[n+1];
     int *c = new int[n+1];
     b[0] = 0;
     c[1] = 0;
-
     for (int i = 1; i <= m; i++) {
         b[i] = b[i-1] + a[i];
         c[i-1] = b[i];
-
         int maxv = b[i];
         for (int j = i+1; j <= n-m+i; j++) {
             b[j] = (b[j-1] > c[j-1] ? b[j-1] + a[j] : c[j-1] + a[j]);
@@ -675,14 +646,12 @@ int MaxSum(int m, int n, int *a)
         }
         c[i+n-m] = maxv;
     }
-
     int sum = 0;
     for (int j = m; j <= n; j++)
-        if (sum < b[j]) sum = b[j];
-
+    if (sum < b[j]) sum = b[j];
     return sum;
 }
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{复杂度：}
 两重循环规模约为 $m\times n$，
