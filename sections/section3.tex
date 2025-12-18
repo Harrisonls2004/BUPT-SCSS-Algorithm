@@ -267,12 +267,18 @@ $b_i=\left\lceil \log_2\left(\max_{t_{i-1}+1\le k\le t_i}p_k + 1\right)\right\rc
 $3+8=11\ \text{位}.$
 目标是：\textbf{选择一种分段方式，使总存储位数最小}，且每段长度不超过 256。
 
-$$
-S[i] = \min_{1 \le j \le \min(i,256)}
-\left\{ S[i-j] + j \cdot \max_{i-j+1 \le t \le i} b[t] \right\} + 1,
-\qquad
-b[t] = \text{length}(p_t).
-$$
+设 $l[i]$, $b[i]$ 是 $\{p_1, p_2, \dots, p_n\}$ 的最优分段。显而易见，$l[1]$, $b[1]$ 是 $\{p_1, \dots, p_{l[1]}\}$ 的最优分段，且 $l[i]$, $b[i]$ 是 $\{p_{l[1]+1}, \dots, p_n\}$ 的最优分段。即图象压缩问题满足最优子结构性质。
+
+设 $s[i]$, $1 \leq i \leq n$，是象素序列 $\{p_1, \dots, p_n\}$ 的最优分段所需的存储位数。由最优子结构性质易知：
+$
+s[i] = \min_{1 \leq k \leq \min\{i, 256\}} \left\{ s[i-k] + k \cdot b\max (i-k+1, i) \right\} + 11
+$
+
+其中
+$
+b\max (i, j) = \left\lceil \log \left( \max_{i \leq k \leq j} \{ p_k \} + 1 \right) \right\rceil
+$
+
 
 \begin{lstlisting}[language=C,style=codeStyle]
 void Compress(int n, int p[], int S[], int L[], int b[])
@@ -350,11 +356,6 @@ void MNS(int C[], int n, int **size)
     // 最终结果
     size[n][n] = max(size[n-1][n],size[n-1][C[n]-1] + 1);
 }
-\end{lstlisting}
-
-\textbf{最优解构造（回溯）：}
-
-\begin{lstlisting}[language=C,style=codeStyle]
 void Traceback(int C[], int **size, int n, int Net[], int &m)
 {
     int j = n;
@@ -396,12 +397,7 @@ T(N,0) = \min_{1 \leq i \leq n} \left\{ a_{i} + T(N-\{i\}, b_{i}) \right\}
 T(S,t) = \min_{i \in S} \left\{ a_{i} + T(S-\{i\}, b_{i} + \max\{t-a_{i}, 0\}) \right\}
 \]
 
-其中：
-\begin{itemize}
-  \item $a_j$：作业 $j$ 在 $M_1$ 的加工时间；
-  \item $T(S-\{j\},b_j)$：剩余作业子集的最优等待时间（将 $b_j$ 作为状态参数）；
-  \item $\max(t-a_j,0)$：由于 $M_2$ 的空闲/等待产生的额外影响项。
-\end{itemize}
+其中：$a_j$：作业 $j$ 在 $M_1$ 的加工时间；$T(S-\{j\},b_j)$：剩余作业子集的最优等待时间（将 $b_j$ 作为状态参数）；$\max(t-a_j,0)$：由于 $M_2$ 的空闲/等待产生的额外影响项。
 
 \textbf{结论：}
 流水作业调度问题在两台机器情形下具有最优子结构性质，
@@ -471,25 +467,18 @@ m(i+1,j), & 0\le j < w_i.
   取两者最大即为最优。
 \end{itemize}
 
-\noindent\textbf{算法代码：}
-
 \begin{lstlisting}[language=C,style=codeStyle]
-template<class Type>
 void knapsack(Type v[], int w[], int c, int n, Type **m)
 {
-    int jMax = min(w[n] - 1, c);
-    // 初始化第 n 个物品这一行：m[n][j]
+    int jMax = min(w[n] - 1, c); // 初始化第 n 个物品这一行：m[n][j]
     for (int j = 0; j <= jMax; j++)
         m[n][j] = 0;
     for (int j = w[n]; j <= c; j++)
-        m[n][j] = v[n];
-    // 从 i=n-1 递推到 2（最后单独处理 i=1）
+        m[n][j] = v[n]; // 从 i = n-1 递推到 2（最后单独处理 i=1）
     for (int i = n - 1; i > 1; i--) {
-        jMax = min(w[i] - 1, c);
-        // j < w[i] 时装不下物品 i，只能继承 m[i+1][j]
+        jMax = min(w[i] - 1, c); // j < w[i] 时装不下物品 i，只能继承 m[i+1][j]
         for (int j = 0; j <= jMax; j++)
-            m[i][j] = m[i+1][j];
-        // j >= w[i] 时，取“选/不选”两种情况的最大值
+            m[i][j] = m[i+1][j]; // j >= w[i] 时，取“选/不选”两种情况的最大值
         for (int j = w[i]; j <= c; j++)
             m[i][j] = max(m[i+1][j], m[i+1][j - w[i]] + v[i]);
     }
@@ -498,6 +487,20 @@ void knapsack(Type v[], int w[], int c, int n, Type **m)
     if (c >= w[1])
         m[1][c] = max(m[1][c], m[2][c - w[1]] + v[1]);
 }
+// 回溯函数：根据动态规划表 m 构造最优解 x
+void traceback(int **m, int w[], int c, int n, int x[]) {
+    for (int i = 1; i < n; i++) {
+        if (m[i][c] == m[i + 1][c]) {  // 第 i 个物品不放入背包
+            x[i] = 0;
+        } else {                       // 第 i 个物品放入背包
+            x[i] = 1;
+            c -= w[i];
+        }
+    }
+    x[n] = (m[n][c]) ? 1 : 0;          // 处理最后一个物品
+}
+
+
 \end{lstlisting}
 
 \textbf{复杂度分析：}
@@ -574,7 +577,7 @@ int MaxSum(int n, int *a)
     int b = 0;     // 记录以当前位置结尾的最大子段和
     for (int i = 1; i <= n; i++) {
         if (b > 0) b = b + a[i];
-        else       b = a[i];
+        else b = a[i];
         if (sum < b) sum = b;
     }
     return sum;
