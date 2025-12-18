@@ -23,22 +23,20 @@ $$
 void MatrixChain(int *p, int n, int **m, int **s) 
 // m[i][j]：最少乘法次数
 // s[i][j]：A_i...A_j 的最优断开位置
-{
-    for (int i = n; i >= 1; i--) {        // 区间左端点
-        for (int j = i; j <= n; j++) {    // 区间右端点
-            if (i == j)
-                m[i][j] = 0;              // 单个矩阵，代价为 0
-            else {
-                int temp = INT_MAX;
-                for (int k = i; k < j; k++) {
-                    int ans = m[i][k] + m[k+1][j] + p[i-1] * p[k] * p[j];
-                    // p[i-1]是k-1的行数；p[k]是列，也是j的行数；p[j]是j的列数
-                    if (ans < temp) {
-                        temp = ans;
-                        s[i][j] = k;      // 记录最优划分点
-                    }
+void MatrixChain(int* p, int n, int** m, int** s) {
+    for(int i = 1; i <= n; i++) m[i][i] = 0;
+    for(int r = 2; r <= n; r++) {
+        for(int i = 1; i <= n - r + 1; i++) {
+            int j = i + r - 1;
+            m[i][j] = m[i+1][j] + p[i-1]*p[i]*p[j];
+            s[i][j] = i;
+
+            for(int k = i + 1; k < j; k++) {
+                int t = m[i][k] + m[k+1][j] + p[i-1]*p[k]*p[j];
+                if(t < m[i][j]) {
+                    m[i][j] = t;
+                    s[i][j] = k;
                 }
-                m[i][j] = temp;
             }
         }
     }
