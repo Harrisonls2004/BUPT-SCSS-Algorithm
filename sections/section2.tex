@@ -319,7 +319,6 @@ void chessBoard(int tr, int tc, int dr, int dc, int size) {
     if (size == 1) return;
     int t = tile++;
     int s = size / 2;
-    
     // 左上子棋盘
     if (dr < tr + s && dc < tc + s) {
         chessBoard(tr, tc, dr, dc, s);
@@ -327,7 +326,6 @@ void chessBoard(int tr, int tc, int dr, int dc, int size) {
         board[tr + s - 1][tc + s - 1] = t;
         chessBoard(tr, tc, tr + s - 1, tc + s - 1, s);
     }
-    
     // 右上子棋盘
     if (dr < tr + s && dc >= tc + s) {
         chessBoard(tr, tc + s, dr, dc, s);
@@ -335,7 +333,6 @@ void chessBoard(int tr, int tc, int dr, int dc, int size) {
         board[tr + s - 1][tc + s] = t;
         chessBoard(tr, tc + s, tr + s - 1, tc + s, s);
     }
-    
     // 左下子棋盘
     if (dr >= tr + s && dc < tc + s) {
         chessBoard(tr + s, tc, dr, dc, s);
@@ -343,7 +340,6 @@ void chessBoard(int tr, int tc, int dr, int dc, int size) {
         board[tr + s][tc + s - 1] = t;
         chessBoard(tr + s, tc, tr + s, tc + s - 1, s);
     }
-    
     // 右下子棋盘
     if (dr >= tr + s && dc >= tc + s) {
         chessBoard(tr + s, tc + s, dr, dc, s);
@@ -358,7 +354,7 @@ void chessBoard(int tr, int tc, int dr, int dc, int size) {
 合并排序是一种典型的分治算法。其基本思想是：\textbf{将待排序序列不断划分为两个子序列，
 分别排序后，再将两个有序子序列合并为一个有序序列}。
 
-\textbf{1.递归排序函数}
+\noindent\textbf{1.递归排序函数}
 \begin{lstlisting}[language=C,style=codeStyle]
 void mergeSort(Type a[], int left, int right)
 {
@@ -372,7 +368,7 @@ void mergeSort(Type a[], int left, int right)
 }
 \end{lstlisting}
 
-\textbf{2.合并函数}
+\noindent\textbf{2.合并函数}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 void merge(Type a[], Type d[], int l, int m, int r)
@@ -382,7 +378,6 @@ void merge(Type a[], Type d[], int l, int m, int r)
         if (a[i] <= a[j]) d[k++] = a[i++];
         else d[k++] = a[j++];
     }
-
     if (i > m)
         for (int q = j; q <= r; q++)  d[k++] = a[q];
     else
@@ -401,7 +396,7 @@ void merge(Type a[], Type d[], int l, int m, int r)
 使得左边元素不大于基准，右边元素不小于基准，
 然后分别对左右两部分递归排序。}
 
-\textbf{1.快速排序的递归框架}
+\noindent\textbf{1.快速排序的递归框架}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 void QuickSort(Type a[], int p, int r)
@@ -414,7 +409,7 @@ void QuickSort(Type a[], int p, int r)
 }
 \end{lstlisting}
 
-\textbf{2.划分函数（Partition）}
+\noindent\textbf{2.划分函数（Partition）}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 int Partition(Type a[], int p, int r)
@@ -433,7 +428,7 @@ int Partition(Type a[], int p, int r)
 }
 \end{lstlisting}
 
-\textbf{3.随机化划分}
+\noindent\textbf{3.随机化划分}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 int RandomizedPartition(Type a[], int p, int r)
@@ -474,7 +469,7 @@ RSelect(a, p, r, k)
 
 \subsection{寻找第 $k$ 小元素（Randomized-Select 算法）}
 
-\textbf{随机划分函数 RandomizedPartition}
+\noindent\textbf{随机划分函数 RandomizedPartition}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 template<class Type>
@@ -485,7 +480,7 @@ int RandomizedPartition(Type a[], int p, int r) {
 }
 \end{lstlisting}
 
-\textbf{划分函数 Partition}
+\noindent\textbf{划分函数 Partition}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 template<class Type>
@@ -505,7 +500,7 @@ int Partition(Type a[], int p, int r)
 }
 \end{lstlisting}
 
-\textbf{随机化选择函数 RandomizedSelect}
+\noindent\textbf{随机化选择函数 RandomizedSelect}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 template<class Type>
@@ -520,7 +515,7 @@ Type RandomizedSelect(Type a[], int p, int r, int k) {
 }
 \end{lstlisting}
 
-\textbf{算法复杂度分析：}在平均情况下，每一次划分都能较均匀地缩小问题规模，因此随机化选择算法的期望时间复杂度为：$O(n)$.相比完全排序所需的 $O(n \log n)$ 时间复杂度，该算法在仅需寻找第 $k$ 小元素时具有更高的效率。
+\textbf{复杂度分析：}在平均情况下，每一次划分都能较均匀地缩小问题规模，因此随机化选择算法的期望时间复杂度为：$O(n)$.相比完全排序所需的 $O(n \log n)$ 时间复杂度，该算法在仅需寻找第 $k$ 小元素时具有更高的效率。
 
 \subsection{循环赛问题}
 

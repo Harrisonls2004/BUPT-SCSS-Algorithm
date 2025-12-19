@@ -20,10 +20,9 @@ $$
 
 \subsubsection{常规方法}
 \begin{lstlisting}[language=C,style=codeStyle]
-void MatrixChain(int *p, int n, int **m, int **s) 
+void MatrixChain(int *p, int n, int **m, int **s) {
 // m[i][j]：最少乘法次数
 // s[i][j]：A_i...A_j 的最优断开位置
-void MatrixChain(int* p, int n, int** m, int** s) {
     for(int i = 1; i <= n; i++) m[i][i] = 0;
     for(int r = 2; r <= n; r++) {
         for(int i = 1; i <= n - r + 1; i++) {

@@ -6,9 +6,9 @@
 
 \usepackage{xcolor}
 \usepackage{listings}
-
-% （可选）把目录标题固定为“目录”
-\renewcommand{\contentsname}{目录}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[edges]{forest}
 
 \lstdefinestyle{codeStyle}{
   basicstyle=\ttfamily\small,
@@ -26,6 +26,10 @@
   commentstyle=\color{gray},
   stringstyle=\color{orange!70!black}
 }
+
+\usepackage{tikz}
+\usetikzlibrary{trees}
+\usetikzlibrary{trees,positioning}
 
 \begin{document}
 
@@ -56,5 +60,6 @@
 \clearpage
 \input{sections/section5}
 \clearpage
+\input{sections/pratice}
 
 \end{document}
