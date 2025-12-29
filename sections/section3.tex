@@ -43,7 +43,7 @@ void MatrixChain(int *p, int n, int **m, int **s) {
 
 \textbf{算法复杂度分析：}MatrixChain的主要计算量取决于算法中对$i$，$j$和$k$的3重循环。循环体内的计算量为$O(1)$，而3重循环的总次数为$O(n^{3})$。因此算法的计算时间上界为$O(n^{3})$。算法所占用的空间显然为$O(n^{2})$。
 
-\subsubsection{递归方法}
+\subsubsection{备忘录方法}
 
 \begin{lstlisting}[language=C,style=codeStyle]
 int LookupChain(int i, int j)
@@ -282,7 +282,7 @@ $
 \begin{lstlisting}[language=C,style=codeStyle]
 void Compress(int n, int p[], int S[], int L[], int b[])
 {
-    int Lmax = 256, header = 1;
+    int Lmax = 256, header = 11;
     S[0] = 0;
     for (int i = 1; i <= n; i++) {           // 依次计算 S[1..n]
         b[i] = length(p[i]);                 // 第 i 个元素所需位数
@@ -362,7 +362,7 @@ void Traceback(int C[], int **size, int n, int Net[], int &m)
     for (int i = n; i > 1; i--) {
         if (size[i][j] != size[i-1][j]) {
             Net[m++] = i;          // 选择连线 i
-            j = C[i] - 1;
+            j = C[i] + 1;
         }
     }
     if (j >= C[1])
